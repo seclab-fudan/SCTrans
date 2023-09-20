@@ -70,7 +70,7 @@ If you are a student(or postdoc), please have your advisor (or host) send us an 
 
 In your email, please include your name, affiliation, and home page (if we do not recognize each other). This information is required only for verification purposes. Please note that if we are unable to determine your identity or affiliation, your request may be ignored.
 
-If your papers or articles use our dataset or our tool, please cite our CCS 2021 paper.
+If your papers or articles use our dataset or our tool, please cite our ICSE 2024 paper.
 
 **For Industry Researchers:**
 
