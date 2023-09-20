@@ -1,0 +1,4 @@
+[submodule "scenario-runner/carla-runner"]
+	path = scenario-runner/carla-runner
+	url = https://github.com/seclab-fudan/scenario_runner.git
+	branch = origin/Modified-0.9.13
