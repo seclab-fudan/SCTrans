@@ -1,0 +1,1812 @@
+-- @path CommonRoad=/SCTrans/metamodels/CommonRoad.ecore
+-- @path OpenSCENARIO=/SCTrans/metamodels/OpenSCENARIO.ecore
+-- @atlcompiler emftvm
+
+
+module cr2openscenario;
+create OUT: OpenSCENARIO from IN: CommonRoad;
+
+helper def: mapinstance: "#native"!"SCTrans::Map" =
+	"#native"!"SCTrans::Map".newInstance();
+
+helper def: randomvar: Integer =
+	let rnd: "#native"!"java::util::Random" =
+		"#native"!"java::util::Random".newInstance()
+	in
+		rnd.nextInt(2);
+
+helper def: mapTrans(name: String): String =
+	thisModule.mapinstance.runTranslate(name);
+
+helper def: getX(x: String, y: String): Real =
+	thisModule.mapinstance.transPointX(x, y);
+
+helper def: getY(x: String, y: String): Real =
+	thisModule.mapinstance.transPointY(x, y);
+
+helper def: getlanelet(id: Integer): TupleType(x: Real, y: Real) =
+	let laneset: CommonRoad!Lanelet =
+		CommonRoad!Lanelet.allInstances() -> select(e | e.id = id) -> first()
+	in
+		let length: Integer =
+			laneset.leftBound.point.asSequence() -> size()
+		in
+			Tuple{x = (laneset.leftBound.point.asSequence() -> at(length - 1).x + laneset.
+					rightBound.point.asSequence() -> at(length - 1).x) / 2, y = (laneset.
+					leftBound.point.asSequence() -> at(length - 1).y + laneset.rightBound.
+					point.asSequence() -> at(length - 1).y) / 2};
+
+helper def: getlanelet2(id: Integer): TupleType(x: Real, y: Real) =
+	let laneset: CommonRoad!Lanelet =
+		CommonRoad!Lanelet.allInstances() -> select(e | e.id = id) -> first()
+	in
+		let length: Integer =
+			laneset.leftBound.point.asSequence() -> size()
+		in
+			Tuple{x = (laneset.leftBound.point -> last().x + laneset.rightBound.point ->
+					last().x) / 2, y = (laneset.leftBound.point -> last().y + laneset.
+					rightBound.point -> last().y) / 2};
+
+helper def: getlanelet_random: Integer =
+	let laneset: CommonRoad!Lanelet =
+		CommonRoad!Lanelet.allInstances().asSequence() -> first()
+	in
+		laneset.id;
+
+helper def: getdelta(id: Integer): TupleType(x: Real, y: Real) =
+	Tuple{x = thisModule.getlanelet2(id).x - thisModule.getlanelet(id).x, y = thisModule.
+			getlanelet2(id).y - thisModule.getlanelet(id).y};
+
+helper def: atan2(delta: TupleType(x: Real, y: Real)): Real =
+	thisModule.mapinstance.getatan(delta.y, delta.x);
+
+helper def: getaverage(s: Sequence(Real)): Real =
+	s -> sum() / s -> size();
+
+helper def: getdst(destpoint: CommonRoad!GoalState): TupleType(x: Real, y: Real) =
+	if destpoint.position.oclIsUndefined() then
+		Tuple{x = thisModule.getlanelet(thisModule.getlanelet_random).x, y = thisModule.
+				getlanelet(thisModule.getlanelet_random).y}
+	else
+		if not destpoint.position.rectangle.oclIsUndefined() then
+			Tuple{x = destpoint.position.rectangle.center.x, y = destpoint.position.
+					rectangle.center.y}
+		else
+			if not destpoint.position.circle.oclIsUndefined() then
+				Tuple{x = destpoint.position.circle.center.x, y = destpoint.position.
+						circle.center.y}
+			else
+				if not destpoint.position.polygon.oclIsUndefined() then
+					Tuple{x = thisModule.getaverage(destpoint.position.polygon.point.
+							asSequence() -> collect(e | e.x)), y = thisModule.
+							getaverage(destpoint.position.polygon.point.asSequence() ->
+							collect(e | e.y))}
+				else
+					Tuple{x = thisModule.getlanelet(destpoint.position.lanelet.ref).x, y
+							= thisModule.getlanelet(destpoint.position.lanelet.ref).y}
+				endif
+			endif
+		endif
+	endif;
+
+helper def: getdstrot(crplan: CommonRoad!PlanningProblem): Real =
+	if not crplan.goalState.orientation.oclIsUndefined() then
+		(crplan.goalState.orientation.intervalStart + crplan.goalState.orientation.
+				intervalEnd) / 2
+	else
+		if not crplan.goalState.position.oclIsUndefined() and not crplan.goalState.
+				position.lanelet.oclIsUndefined() then
+			thisModule.atan2(thisModule.getdelta(crplan.goalState.position.lanelet.ref))
+		else
+			thisModule.atan2(thisModule.getdelta(thisModule.getlanelet_random))
+		endif
+	endif;
+
+helper def: getCloudstate: String =
+	if thisModule.randomvar = 1 then
+		'cloudy'
+	else
+		'free'
+	endif;
+
+helper def: getIntensity: Real =
+	if thisModule.randomvar = 1 then
+		0.0
+	else
+		if thisModule.randomvar = 0 then
+			0.5
+		else
+			0.8
+		endif
+	endif;
+
+helper def: getfog: Real =
+	if thisModule.randomvar = 1 then
+		1000.0
+	else
+		if thisModule.randomvar = 0 then
+			10000.0
+		else
+			100000.0
+		endif
+	endif;
+
+helper def: getspeedSet(input: Sequence(CommonRoad!State)):
+		Sequence(OpenSCENARIO!SpeedProfileEntryType) =
+	if thisModule.interBool then
+		Sequence{} -> union(Sequence{})
+	else
+		input -> iterate(ee; r: Sequence(OpenSCENARIO!SpeedProfileEntryType) = Sequence{}
+				| r -> append(thisModule.SpeedProfile(ee)))
+	endif;
+
+helper def: getpolyline(input: Sequence(CommonRoad!State)):
+		Sequence(OpenSCENARIO!VertexType) =
+	if thisModule.interBool then
+		Sequence{} -> union(Sequence{})
+	else
+		input -> iterate(ee; r: Sequence(OpenSCENARIO!VertexType) = Sequence{} | r ->
+				append(thisModule.Vertex(ee)))
+	endif;
+
+helper def: getwaypoint(input: Sequence(CommonRoad!State)):
+		Sequence(OpenSCENARIO!WaypointType) =
+	if thisModule.interBool then
+		Sequence{} -> union(Sequence{})
+	else
+		if input -> size() = 1 then
+			input -> union(input) -> iterate(ee; r: Sequence(OpenSCENARIO!WaypointType) =
+					Sequence{} | r -> append(thisModule.Waypoint(ee)))
+		else
+			input -> iterate(ee; r: Sequence(OpenSCENARIO!WaypointType) = Sequence{} | r
+					-> append(thisModule.Waypoint(ee)))
+		endif
+	endif;
+
+helper def: interBool: Boolean =
+	thisModule.mapinstance.interactive;
+
+helper def: getallActions(cr: CommonRoad!DocumentRoot): OpenSCENARIO!PrivateType =
+	if thisModule.interBool then
+		(cr.commonRoad.obstacle -> collect(e | thisModule.ObstacleManeuverinter(e))) ->
+				union(cr.commonRoad.dynamicObstacle.asSequence() -> collect(e1 |
+				thisModule.DynamicManeuverinter(e1)))
+	else
+		(cr.commonRoad.obstacle -> collect(e | thisModule.ObstacleManeuver(e))) ->
+				union(cr.commonRoad.dynamicObstacle.asSequence() -> collect(e1 |
+				thisModule.DynamicManeuver(e1)))
+	endif;
+
+helper def: getallinitActions(cr: CommonRoad!DocumentRoot): OpenSCENARIO!PrivateType =
+	if thisModule.interBool then
+		(cr.commonRoad.planningProblem.asSequence() -> collect(e | thisModule.
+				EgoInit(e))) -> union(cr.commonRoad.obstacle -> collect(e | thisModule.
+				ObstacleInitInter(e))) -> union(cr.commonRoad.dynamicObstacle.
+				asSequence() -> collect(e1 | thisModule.DynamicInitInter(e1))) ->
+				union(cr.commonRoad.staticObstacle.asSequence() -> collect(e | thisModule.
+				StaticInit(e)))
+	else
+		(cr.commonRoad.planningProblem.asSequence() -> collect(e | thisModule.
+				EgoInit(e))) -> union(cr.commonRoad.obstacle -> collect(e | thisModule.
+				ObstacleInit(e))) -> union(cr.commonRoad.dynamicObstacle.asSequence() ->
+				collect(e1 | thisModule.DynamicInit(e1))) -> union(cr.commonRoad.
+				staticObstacle.asSequence() -> collect(e | thisModule.StaticInit(e)))
+	endif;
+
+helper def: getvar(type: CommonRoad!ObstacleTypeDynamic): String =
+	if type = #car then
+		'car'
+	else
+		if type = #truck then
+			'truck'
+		else
+			if type = #bus then
+				'bus'
+			else
+				if type = #bicycle or type = #motorcycle then
+					'bicycle'
+				else
+					'car'
+				endif
+			endif
+		endif
+	endif;
+
+helper def: gettype(type: CommonRoad!ObstacleTypeDynamic): String =
+	if type = #car then
+		'vehicle.tesla.model3'
+	else
+		if type = #truck then
+			'vehicle.carlamotors.carlacola'
+		else
+			if type = #bus then
+				'vehicle.volkswagen.t2'
+			else
+				if type = #bicycle or type = #motorcycle then
+					'vehicle.diamondback.century'
+				else
+					if type = #pedestrian then
+						'walker.pedestrian.0001'
+					else
+						'vehicle.tesla.model3'
+					endif
+				endif
+			endif
+		endif
+	endif;
+
+helper def: gethelper(type: CommonRoad!ObstacleTypeDynamic): String =
+	if thisModule.interBool then
+		'external_control'
+	else
+		if type = #pedestrian then
+			'pedestrian_control'
+		else
+			'waypoint_vehicle_control'
+		endif
+	endif;
+
+rule cr2openscenario {
+	from
+		cr: CommonRoad!DocumentRoot
+	using {
+		mapname: String = thisModule.mapTrans(cr.commonRoad.benchmarkID);
+	}
+	to
+		openscenario: OpenSCENARIO!OpenScenario (
+			FileHeader <- opfileheader,
+			ParameterDeclarations <- oppara,
+			CatalogLocations <- opcat,
+			RoadNetwork <- oproad,
+			Entities <- opentities,
+			Storyboard <- opstoryboard
+		),
+		oppara: OpenSCENARIO!ParameterDeclarationsType (
+		),
+		opcat: OpenSCENARIO!CatalogLocationsType (
+		),
+		opfileheader: OpenSCENARIO!FileHeaderType (
+			author <- 'trial',
+			date <- '2023-03-23T12:00:00',
+			description <- 'myscenario',
+			revMajor <- 1,
+			revMinor <- 0
+		),
+		opfilepath: OpenSCENARIO!File (
+			filepath <- mapname + '.xodr'
+		),
+		oproad: OpenSCENARIO!RoadNetworkType (
+			LogicFile <- opfilepath
+		),
+		opentities: OpenSCENARIO!EntitiesType (
+			ScenarioObject <- (cr.commonRoad.planningProblem.asSequence() -> collect(e |
+					thisModule.EgoEntity(e))) -> union(cr.commonRoad.obstacle ->
+					collect(e | if e.type = #pedestrain then
+									thisModule.ObstacleEntityPed(e)
+								else
+									thisModule.ObstacleEntityVehicle(e)
+								endif)) -> union(cr.commonRoad.dynamicObstacle.
+										asSequence() -> collect(e | if e.type =
+										#pedestrian then
+								thisModule.DynamicEntityPed(e)
+							else
+								thisModule.DynamicEntityVehicle(e)
+							endif)) -> union(cr.commonRoad.staticObstacle.asSequence() ->
+									collect(e | if e.type = #pedestrian then
+							thisModule.StaticEntityPed(e)
+						else
+							thisModule.StaticEntityVehicle(e)
+						endif))
+		),
+		opstoryboard: OpenSCENARIO!StoryboardType (
+			Init <- opinitstory,
+			Story <- Sequence{opstory},
+			StopTrigger <- opstoptrigger
+		),
+		opinitstory: OpenSCENARIO!InitStory (
+			Actions <- opinitaction
+		),
+		opinitaction: OpenSCENARIO!InitActions (
+			GlobalAction <- Sequence{opweather},
+			Private <- thisModule.getallinitActions(cr)
+		),
+		opweather: OpenSCENARIO!GlobalActionType (
+			EnvironmentAction <- openvironmentaction
+		),
+		openvironmentaction: OpenSCENARIO!EnvironmentActionType (
+			Environment <- openvironment
+		),
+		openvironment: OpenSCENARIO!EnvironmentType (
+			TimeOfDay <- optime,
+			Weather <- opwea,
+			RoadCondition <- oproadcondition,
+			name <- 'myenvironment'
+		),
+		optime: OpenSCENARIO!TimeOfDayType (
+			animation <- false,
+			dateTime <- '2023-03-20T12:00:00'
+		),
+		opwea: OpenSCENARIO!WeatherType (
+			cloudState <- thisModule.getCloudstate,
+			Fog <- opfog,
+			Precipitation <- oppre2,
+			Sun <- opsun
+		),
+		opfog: OpenSCENARIO!FogType (
+			visualRange <- thisModule.getfog
+		),
+		opsun: OpenSCENARIO!SunType (
+			intensity <- 1 - thisModule.getIntensity / 2,
+			azimuth <- 0.0,
+			elevation <- 1.31
+		),
+		oppre2: OpenSCENARIO!PrecipitationType (
+			precipitationType <- 'rain',
+			intensity <- thisModule.getIntensity
+		),
+		oproadcondition: OpenSCENARIO!RoadConditionType (
+			frictionScaleFactor <- 1.0
+		),
+		opstory: OpenSCENARIO!StoryType (
+			Act <- Sequence{opact},
+			name <- 'mystory'
+		),
+		opact: OpenSCENARIO!ActType (
+			name <- 'my_act',
+			StartTrigger <- opstarttrigger,
+			ManeuverGroup <- thisModule.getallActions(cr)
+		),
+		opstarttrigger: OpenSCENARIO!TriggerType (
+			ConditionGroup <- Sequence{opconditiongroup1}
+		),
+		opconditiongroup1: OpenSCENARIO!ConditionGroupType (
+			Condition <- Sequence{opcondition1}
+		),
+		opcondition1: OpenSCENARIO!ConditionType (
+			name <- 'startTrigger',
+			delay <- 0.0,
+			conditionEdge <- #rising,
+			ByValueCondition <- opvalue1
+		),
+		opvalue1: OpenSCENARIO!ByValueConditionType (
+			SimulationTimeCondition <- opstorycondition1
+		),
+		opstorycondition1: OpenSCENARIO!SimulationTimeConditionType (
+			rule <- 'greaterThan',
+			value <- 0.0
+		),
+		opstoptrigger: OpenSCENARIO!TriggerType (
+			ConditionGroup <- Sequence{opconditiongroup}
+		),
+		opconditiongroup: OpenSCENARIO!ConditionGroupType (
+			Condition <- Sequence{opcondition}
+		),
+		opcondition: OpenSCENARIO!ConditionType (
+			name <- 'myTrigger',
+			delay <- 1.0,
+			conditionEdge <- #none,
+			ByValueCondition <- opbyvalue
+		),
+		opbyvalue: OpenSCENARIO!ByValueConditionType (
+			StoryboardElementStateCondition <- opstorycondition
+		),
+		opstorycondition: OpenSCENARIO!StoryboardElementStateConditionType (
+			state <- 'completeState',
+			storyboardElementType <- 'story',
+			storyboardElementRef <- 'mystory'
+		)
+}
+
+lazy rule EgoEntity {
+	from
+		crego: CommonRoad!PlanningProblem
+	to
+		opego: OpenSCENARIO!ScenarioObjectType (
+			name <- 'ego_vehicle',
+			Vehicle <- opvehicle
+		),
+		opvehicle: OpenSCENARIO!VehicleType (
+			name <- 'vehicle.lincoln.mkz2017',
+			vehicleCategory <- 'car',
+			BoundingBox <- opbound,
+			Performance <- opperform,
+			Properties <- opproperty,
+			Axles <- opaxles
+		),
+		opbound: OpenSCENARIO!BoundingBoxType (
+			Center <- opcenter,
+			Dimensions <- opdimension
+		),
+		opcenter: OpenSCENARIO!CenterType (
+			x <- 2.0,
+			y <- 0.0,
+			z <- 0.9
+		),
+		opdimension: OpenSCENARIO!DimensionsType (
+			height <- 1.8,
+			length <- 5.0,
+			width <- 2.0
+		),
+		opperform: OpenSCENARIO!PerformanceType (
+			maxAcceleration <- 10.0,
+			maxDeceleration <- 10.0,
+			maxSpeed <- 69.0
+		),
+		opaxles: OpenSCENARIO!AxlesType (
+			FrontAxle <- opaxle1,
+			RearAxle <- opaxle2
+		),
+		opaxle1: OpenSCENARIO!AxleType (
+			maxSteering <- 0.5,
+			positionX <- 3.1,
+			wheelDiameter <- 0.6,
+			trackWidth <- 1.8,
+			positionZ <- 0.3
+		),
+		opaxle2: OpenSCENARIO!AxleType (
+			maxSteering <- 0.0,
+			positionX <- 0.0,
+			wheelDiameter <- 0.6,
+			trackWidth <- 1.8,
+			positionZ <- 0.3
+		),
+		opproperty: OpenSCENARIO!PropertiesType (
+			Property <- Sequence{oppro}
+		),
+		oppro: OpenSCENARIO!PropertyType (
+			name <- 'type',
+			value <- 'ego_vehicle'
+		)
+}
+
+lazy rule DynamicEntityPed {
+	from
+		crdynamic: CommonRoad!DynamicObstacle
+	to
+		opdynamic: OpenSCENARIO!ScenarioObjectType (
+			name <- 'Npc' + crdynamic.id.toString(),
+			Pedestrian <- oppedestrian
+		),
+		oppedestrian: OpenSCENARIO!PedestrianType (
+			model <- thisModule.gettype(crdynamic.type),
+			name <- thisModule.gettype(crdynamic.type),
+			pedestrianCategory <- 'pedestrian',
+			BoundingBox <- opbound,
+			mass <- 90.0,
+			Properties <- opproperty
+		),
+		opbound: OpenSCENARIO!BoundingBoxType (
+			Center <- opcenter,
+			Dimensions <- opdimension
+		),
+		opcenter: OpenSCENARIO!CenterType (
+			x <- 2.0,
+			y <- 0.0,
+			z <- 0.9
+		),
+		opdimension: OpenSCENARIO!DimensionsType (
+			height <- 1.8,
+			length <- 5.0,
+			width <- 2.0
+		),
+		opproperty: OpenSCENARIO!PropertiesType (
+			Property <- Sequence{oppro}
+		),
+		oppro: OpenSCENARIO!PropertyType (
+			name <- 'type',
+			value <- 'simulation'
+		)
+}
+
+lazy rule DynamicEntityVehicle {
+	from
+		crdynamic: CommonRoad!DynamicObstacle
+	to
+		opdynamic: OpenSCENARIO!ScenarioObjectType (
+			name <- 'Npc' + crdynamic.id.toString(),
+			Vehicle <- opvehicle
+		),
+		opvehicle: OpenSCENARIO!VehicleType (
+			name <- thisModule.gettype(crdynamic.type),
+			vehicleCategory <- thisModule.getvar(crdynamic.type),
+			BoundingBox <- opbound,
+			Performance <- opperform,
+			Properties <- opproperty,
+			Axles <- opaxles
+		),
+		opbound: OpenSCENARIO!BoundingBoxType (
+			Center <- opcenter,
+			Dimensions <- opdimension
+		),
+		opcenter: OpenSCENARIO!CenterType (
+			x <- 2.0,
+			y <- 0.0,
+			z <- 0.9
+		),
+		opdimension: OpenSCENARIO!DimensionsType (
+			height <- 1.8,
+			length <- 4.5,
+			width <- 2.1
+		),
+		opperform: OpenSCENARIO!PerformanceType (
+			maxAcceleration <- 200.0,
+			maxDeceleration <- 10.0,
+			maxSpeed <- 69.444
+		),
+		opaxles: OpenSCENARIO!AxlesType (
+			FrontAxle <- opaxle1,
+			RearAxle <- opaxle2
+		),
+		opaxle1: OpenSCENARIO!AxleType (
+			maxSteering <- 0.5,
+			positionX <- 3.1,
+			wheelDiameter <- 0.6,
+			trackWidth <- 1.8,
+			positionZ <- 0.3
+		),
+		opaxle2: OpenSCENARIO!AxleType (
+			maxSteering <- 0.0,
+			positionX <- 0.0,
+			wheelDiameter <- 0.6,
+			trackWidth <- 1.8,
+			positionZ <- 0.3
+		),
+		opproperty: OpenSCENARIO!PropertiesType (
+			Property <- Sequence{oppro}
+		),
+		oppro: OpenSCENARIO!PropertyType (
+			name <- 'type',
+			value <- 'simulation'
+		)
+}
+
+lazy rule StaticEntityPed {
+	from
+		crstatic: CommonRoad!StaticObstacle
+	to
+		opstatic: OpenSCENARIO!ScenarioObjectType (
+			name <- 'Npc' + crstatic.id.toString(),
+			Pedestrian <- opped
+		),
+		opped: OpenSCENARIO!PedestrianType (
+			model <- thisModule.gettype(crstatic.type),
+			name <- thisModule.gettype(crstatic.type),
+			pedestrianCategory <- 'pedestrian',
+			BoundingBox <- opbound,
+			mass <- 90.0,
+			Properties <- opproperty
+		),
+		opbound: OpenSCENARIO!BoundingBoxType (
+			Center <- opcenter,
+			Dimensions <- opdimension
+		),
+		opcenter: OpenSCENARIO!CenterType (
+			x <- 2.0,
+			y <- 0.0,
+			z <- 0.9
+		),
+		opdimension: OpenSCENARIO!DimensionsType (
+			height <- 1.8,
+			length <- 5.0,
+			width <- 2.0
+		),
+		opproperty: OpenSCENARIO!PropertiesType (
+			Property <- Sequence{oppro}
+		),
+		oppro: OpenSCENARIO!PropertyType (
+			name <- 'type',
+			value <- 'simulation'
+		)
+}
+
+lazy rule StaticEntityVehicle {
+	from
+		crstatic: CommonRoad!StaticObstacle
+	to
+		opstatic: OpenSCENARIO!ScenarioObjectType (
+			name <- 'Npc' + crstatic.id.toString(),
+			Vehicle <- opveh
+		),
+		opveh: OpenSCENARIO!VehicleType (
+			name <- thisModule.gettype(crstatic.type),
+			vehicleCategory <- thisModule.getvar(crstatic.type),
+			BoundingBox <- opbound,
+			Performance <- opperform,
+			Properties <- opproperty,
+			Axles <- opaxles
+		),
+		opbound: OpenSCENARIO!BoundingBoxType (
+			Center <- opcenter,
+			Dimensions <- opdimension
+		),
+		opcenter: OpenSCENARIO!CenterType (
+			x <- 2.0,
+			y <- 0.0,
+			z <- 0.9
+		),
+		opdimension: OpenSCENARIO!DimensionsType (
+			height <- 1.8,
+			length <- 5.0,
+			width <- 2.0
+		),
+		opperform: OpenSCENARIO!PerformanceType (
+			maxAcceleration <- 10.0,
+			maxDeceleration <- 10.0,
+			maxSpeed <- 69.0
+		),
+		opaxles: OpenSCENARIO!AxlesType (
+			FrontAxle <- opaxle1,
+			RearAxle <- opaxle2
+		),
+		opaxle1: OpenSCENARIO!AxleType (
+			maxSteering <- 0.5,
+			positionX <- 3.1,
+			wheelDiameter <- 0.6,
+			trackWidth <- 1.8,
+			positionZ <- 0.3
+		),
+		opaxle2: OpenSCENARIO!AxleType (
+			maxSteering <- 0.0,
+			positionX <- 0.0,
+			wheelDiameter <- 0.6,
+			trackWidth <- 1.8,
+			positionZ <- 0.3
+		),
+		opproperty: OpenSCENARIO!PropertiesType (
+			Property <- Sequence{oppro}
+		),
+		oppro: OpenSCENARIO!PropertyType (
+			name <- 'type',
+			value <- 'simulation'
+		)
+}
+
+lazy rule ObstacleEntityPed {
+	from
+		crobstacle: CommonRoad!ObstacleType
+	to
+		opstatic: OpenSCENARIO!ScenarioObjectType (
+			name <- 'Npc' + crobstacle.id.toString(),
+			Pedestrian <- opped
+		),
+		opped: OpenSCENARIO!PedestrianType (
+			model <- thisModule.gettype(crobstacle.type),
+			name <- thisModule.gettype(crobstacle.type),
+			pedestrianCategory <- 'pedestrian',
+			BoundingBox <- opbound,
+			mass <- 90.0,
+			Properties <- opproperty
+		),
+		opbound: OpenSCENARIO!BoundingBoxType (
+			Center <- opcenter,
+			Dimensions <- opdimension
+		),
+		opcenter: OpenSCENARIO!CenterType (
+			x <- 2.0,
+			y <- 0.0,
+			z <- 0.9
+		),
+		opdimension: OpenSCENARIO!DimensionsType (
+			height <- 1.8,
+			length <- 5.0,
+			width <- 2.0
+		),
+		opproperty: OpenSCENARIO!PropertiesType (
+			Property <- Sequence{oppro}
+		),
+		oppro: OpenSCENARIO!PropertyType (
+			name <- 'type',
+			value <- 'simulation'
+		)
+}
+
+lazy rule ObstacleEntityVehicle {
+	from
+		crobstacle: CommonRoad!ObstacleType
+	to
+		opobstacle: OpenSCENARIO!ScenarioObjectType (
+			name <- 'Npc' + crobstacle.id.toString(),
+			Vehicle <- opveh
+		),
+		opveh: OpenSCENARIO!VehicleType (
+			name <- thisModule.gettype(crobstacle.type),
+			vehicleCategory <- thisModule.getvar(crobstacle.type),
+			BoundingBox <- opbound,
+			Performance <- opperform,
+			Properties <- opproperty,
+			Axles <- opaxles
+		),
+		opbound: OpenSCENARIO!BoundingBoxType (
+			Center <- opcenter,
+			Dimensions <- opdimension
+		),
+		opcenter: OpenSCENARIO!CenterType (
+			x <- 2.0,
+			y <- 0.0,
+			z <- 0.9
+		),
+		opdimension: OpenSCENARIO!DimensionsType (
+			height <- 1.8,
+			length <- 5.0,
+			width <- 2.0
+		),
+		opperform: OpenSCENARIO!PerformanceType (
+			maxAcceleration <- 10.0,
+			maxDeceleration <- 10.0,
+			maxSpeed <- 69.0
+		),
+		opaxles: OpenSCENARIO!AxlesType (
+			FrontAxle <- opaxle1,
+			RearAxle <- opaxle2
+		),
+		opaxle1: OpenSCENARIO!AxleType (
+			maxSteering <- 0.5,
+			positionX <- 3.1,
+			wheelDiameter <- 0.6,
+			trackWidth <- 1.8,
+			positionZ <- 0.3
+		),
+		opaxle2: OpenSCENARIO!AxleType (
+			maxSteering <- 0.0,
+			positionX <- 0.0,
+			wheelDiameter <- 0.6,
+			trackWidth <- 1.8,
+			positionZ <- 0.3
+		),
+		opproperty: OpenSCENARIO!PropertiesType (
+			Property <- Sequence{oppro}
+		),
+		oppro: OpenSCENARIO!PropertyType (
+			name <- 'type',
+			value <- 'simulation'
+		)
+}
+
+lazy rule EgoInit {
+	from
+		cregoinit: CommonRoad!PlanningProblem
+	to
+		opegoinit: OpenSCENARIO!PrivateType (
+			entityRef <- 'ego_vehicle',
+			PrivateAction <- Sequence{privatespeed,
+						privateposition,
+						privatedest,
+						oppcon}
+		),
+		privatespeed: OpenSCENARIO!PrivateActionType (
+			LongitudinalAction <- oplongitudinalAction
+		),
+		oplongitudinalAction: OpenSCENARIO!LongitudinalActionType (
+			SpeedAction <- opspeedaction
+		),
+		opspeedaction: OpenSCENARIO!SpeedActionType (
+			SpeedActionDynamics <- opspeedactiondynamic,
+			SpeedActionTarget <- opspeedactiontarget
+		),
+		opspeedactiondynamic: OpenSCENARIO!TransitionDynamics (
+			dynamicsDimension <- 'time',
+			dynamicsShape <- 'step',
+			value <- 1.0
+		),
+		opspeedactiontarget: OpenSCENARIO!SpeedActionTargetType (
+			AbsoluteTargetSpeed <- opabsolutetargetspeed
+		),
+		opabsolutetargetspeed: OpenSCENARIO!AbsoluteTargetSpeedType (
+			value <- cregoinit.initialState.velocity.exact
+		),
+		privateposition: OpenSCENARIO!PrivateActionType (
+			TeleportAction <- opteleportaction
+		),
+		opteleportaction: OpenSCENARIO!TeleportActionType (
+			Position <- opposition
+		),
+		opposition: OpenSCENARIO!PositionType (
+			WorldPosition <- opworldposition
+		),
+		opworldposition: OpenSCENARIO!WorldPositionType (
+			h <- cregoinit.initialState.orientation.exact,
+			x <- thisModule.getX(cregoinit.initialState.position.point.x.toString(),
+					cregoinit.initialState.position.point.y.toString()),
+			y <- thisModule.getY(cregoinit.initialState.position.point.x.toString(),
+					cregoinit.initialState.position.point.y.toString()),
+			z <- 0.0
+		),
+		privatedest: OpenSCENARIO!PrivateActionType (
+			RoutingAction <- oproutingaction
+		),
+		oproutingaction: OpenSCENARIO!RoutingActionType (
+			AcquirePositionAction <- opacquire
+		),
+		opacquire: OpenSCENARIO!AcquirePositionActionType (
+			Position <- opacquireposition
+		),
+		opacquireposition: OpenSCENARIO!PositionType (
+			WorldPosition <- opworld
+		),
+		opworld: OpenSCENARIO!WorldPositionType (
+			h <- thisModule.getdstrot(cregoinit),
+			x <- thisModule.getX(thisModule.getdst(cregoinit.goalState).x.toString(),
+					thisModule.getdst(cregoinit.goalState).y.toString()),
+			y <- thisModule.getY(thisModule.getdst(cregoinit.goalState).x.toString(),
+					thisModule.getdst(cregoinit.goalState).y.toString()),
+			z <- 0.0
+		),
+		oppcon: OpenSCENARIO!PrivateActionType (
+			ControllerAction <- opcontrol
+		),
+		opcontrol: OpenSCENARIO!ControllerActionType (
+			AssignControllerAction <- opassigncontrol,
+			OverrideControllerValueAction <- opcontrolvalue
+		),
+		opassigncontrol: OpenSCENARIO!AssignControllerActionType (
+			Controller <- opc
+		),
+		opc: OpenSCENARIO!ControllerType (
+			name <- 'HeroAgent',
+			Properties <- opproperties
+		),
+		opproperties: OpenSCENARIO!PropertiesType (
+			Property <- Sequence{opp}
+		),
+		opp: OpenSCENARIO!PropertyType (
+			name <- 'module',
+			value <- 'external_control'
+		),
+		opcontrolvalue: OpenSCENARIO!OverrideControllerValueActionType (
+			Throttle <- opthrottle,
+			Brake <- opbrake,
+			Clutch <- opclutch,
+			ParkingBrake <- opparkingbrake,
+			SteeringWheel <- opsteering,
+			Gear <- opgear
+		),
+		opthrottle: OpenSCENARIO!OverrideThrottleAction (
+			value <- 0.0,
+			active <- false
+		),
+		opbrake: OpenSCENARIO!OverrideBrakeAction (
+			value <- 0.0,
+			active <- false
+		),
+		opclutch: OpenSCENARIO!OverrideClutchAction (
+			value <- 0.0,
+			active <- false
+		),
+		opparkingbrake: OpenSCENARIO!OverrideParkingBrakeAction (
+			value <- 0.0,
+			active <- false
+		),
+		opsteering: OpenSCENARIO!OverrideSteeringWheelAction (
+			value <- 0.0,
+			active <- false
+		),
+		opgear: OpenSCENARIO!OverrideGearAction (
+			number <- 0.0,
+			active <- false
+		)
+}
+
+lazy rule DynamicInit {
+	from
+		crdynamicinit: CommonRoad!DynamicObstacle
+	to
+		opdynamicinit: OpenSCENARIO!PrivateType (
+			entityRef <- 'Npc' + crdynamicinit.id.toString(),
+			PrivateAction <- Sequence{privatespeed1,
+						privateposition1,
+						oppcon,
+						opprivate}
+		),
+		privatespeed1: OpenSCENARIO!PrivateActionType (
+			LongitudinalAction <- oplongitudinalAction1
+		),
+		oplongitudinalAction1: OpenSCENARIO!LongitudinalActionType (
+			SpeedAction <- opspeedaction1
+		),
+		opspeedaction1: OpenSCENARIO!SpeedActionType (
+			SpeedActionDynamics <- opspeedactiondynamic1,
+			SpeedActionTarget <- opspeedactiontarget1
+		),
+		opspeedactiondynamic1: OpenSCENARIO!TransitionDynamics (
+			dynamicsDimension <- 'time',
+			dynamicsShape <- 'step',
+			value <- 1.0
+		),
+		opspeedactiontarget1: OpenSCENARIO!SpeedActionTargetType (
+			AbsoluteTargetSpeed <- opabsolutetargetspeed1
+		),
+		opabsolutetargetspeed1: OpenSCENARIO!AbsoluteTargetSpeedType (
+			value <- crdynamicinit.initialState.velocity.exact
+		),
+		privateposition1: OpenSCENARIO!PrivateActionType (
+			TeleportAction <- opteleportaction1
+		),
+		opteleportaction1: OpenSCENARIO!TeleportActionType (
+			Position <- opposition1
+		),
+		opposition1: OpenSCENARIO!PositionType (
+			WorldPosition <- opworldposition1
+		),
+		opworldposition1: OpenSCENARIO!WorldPositionType (
+			h <- crdynamicinit.initialState.orientation.exact,
+			x <- thisModule.getX(crdynamicinit.initialState.position.point.x.toString(),
+					crdynamicinit.initialState.position.point.y.toString()),
+			y <- thisModule.getY(crdynamicinit.initialState.position.point.x.toString(),
+					crdynamicinit.initialState.position.point.y.toString()),
+			z <- 0.0
+		),
+		oppcon: OpenSCENARIO!PrivateActionType (
+			ControllerAction <- opcontrol
+		),
+		opcontrol: OpenSCENARIO!ControllerActionType (
+			AssignControllerAction <- opassigncontrol,
+			OverrideControllerValueAction <- opcontrolvalue
+		),
+		opassigncontrol: OpenSCENARIO!AssignControllerActionType (
+			Controller <- opc
+		),
+		opc: OpenSCENARIO!ControllerType (
+			name <- 'Npc' + crdynamicinit.id.toString() + 'control',
+			Properties <- opproperties
+		),
+		opproperties: OpenSCENARIO!PropertiesType (
+			Property <- Sequence{opp}
+		),
+		opp: OpenSCENARIO!PropertyType (
+			name <- 'module',
+			value <- thisModule.gethelper(crdynamicinit.type)
+		),
+		opcontrolvalue: OpenSCENARIO!OverrideControllerValueActionType (
+			Throttle <- opthrottle,
+			Brake <- opbrake,
+			Clutch <- opclutch,
+			ParkingBrake <- opparkingbrake,
+			SteeringWheel <- opsteering,
+			Gear <- opgear
+		),
+		opthrottle: OpenSCENARIO!OverrideThrottleAction (
+			value <- 0.0,
+			active <- false
+		),
+		opbrake: OpenSCENARIO!OverrideBrakeAction (
+			value <- 0.0,
+			active <- false
+		),
+		opclutch: OpenSCENARIO!OverrideClutchAction (
+			value <- 0.0,
+			active <- false
+		),
+		opparkingbrake: OpenSCENARIO!OverrideParkingBrakeAction (
+			value <- 0.0,
+			active <- false
+		),
+		opsteering: OpenSCENARIO!OverrideSteeringWheelAction (
+			value <- 0.0,
+			active <- false
+		),
+		opgear: OpenSCENARIO!OverrideGearAction (
+			number <- 0.0,
+			active <- false
+		),
+		opprivate: OpenSCENARIO!PrivateActionType (
+			LongitudinalAction <- oplong
+		),
+		oplong: OpenSCENARIO!LongitudinalActionType (
+			SpeedProfileAction <- opspeed
+		),
+		opspeed: OpenSCENARIO!SpeedProfileActionType (
+			followingMode <- 'follow',
+			SpeedProfileEntry <- thisModule.getspeedSet(crdynamicinit.trajectory.state.
+					asSequence())
+		)
+}
+
+lazy rule DynamicInitInter {
+	from
+		crdynamicinit: CommonRoad!DynamicObstacle
+	to
+		opdynamicinit: OpenSCENARIO!PrivateType (
+			entityRef <- 'Npc' + crdynamicinit.id.toString(),
+			PrivateAction <- Sequence{privatespeed1,
+						privateposition1,
+						oppcon}
+		),
+		privatespeed1: OpenSCENARIO!PrivateActionType (
+			LongitudinalAction <- oplongitudinalAction1
+		),
+		oplongitudinalAction1: OpenSCENARIO!LongitudinalActionType (
+			SpeedAction <- opspeedaction1
+		),
+		opspeedaction1: OpenSCENARIO!SpeedActionType (
+			SpeedActionDynamics <- opspeedactiondynamic1,
+			SpeedActionTarget <- opspeedactiontarget1
+		),
+		opspeedactiondynamic1: OpenSCENARIO!TransitionDynamics (
+			dynamicsDimension <- 'time',
+			dynamicsShape <- 'step',
+			value <- 1.0
+		),
+		opspeedactiontarget1: OpenSCENARIO!SpeedActionTargetType (
+			AbsoluteTargetSpeed <- opabsolutetargetspeed1
+		),
+		opabsolutetargetspeed1: OpenSCENARIO!AbsoluteTargetSpeedType (
+			value <- crdynamicinit.initialState.velocity.exact
+		),
+		privateposition1: OpenSCENARIO!PrivateActionType (
+			TeleportAction <- opteleportaction1
+		),
+		opteleportaction1: OpenSCENARIO!TeleportActionType (
+			Position <- opposition1
+		),
+		opposition1: OpenSCENARIO!PositionType (
+			WorldPosition <- opworldposition1
+		),
+		opworldposition1: OpenSCENARIO!WorldPositionType (
+			h <- crdynamicinit.initialState.orientation.exact,
+			x <- thisModule.getX(crdynamicinit.initialState.position.point.x.toString(),
+					crdynamicinit.initialState.position.point.y.toString()),
+			y <- thisModule.getY(crdynamicinit.initialState.position.point.x.toString(),
+					crdynamicinit.initialState.position.point.y.toString()),
+			z <- 0.0
+		),
+		oppcon: OpenSCENARIO!PrivateActionType (
+			ControllerAction <- opcontrol
+		),
+		opcontrol: OpenSCENARIO!ControllerActionType (
+			AssignControllerAction <- opassigncontrol,
+			OverrideControllerValueAction <- opcontrolvalue
+		),
+		opassigncontrol: OpenSCENARIO!AssignControllerActionType (
+			Controller <- opc
+		),
+		opc: OpenSCENARIO!ControllerType (
+			name <- 'Npc' + crdynamicinit.id.toString() + 'control',
+			Properties <- opproperties
+		),
+		opproperties: OpenSCENARIO!PropertiesType (
+			Property <- Sequence{opp}
+		),
+		opp: OpenSCENARIO!PropertyType (
+			name <- 'module',
+			value <- thisModule.gethelper(crdynamicinit.type)
+		),
+		opcontrolvalue: OpenSCENARIO!OverrideControllerValueActionType (
+			Throttle <- opthrottle,
+			Brake <- opbrake,
+			Clutch <- opclutch,
+			ParkingBrake <- opparkingbrake,
+			SteeringWheel <- opsteering,
+			Gear <- opgear
+		),
+		opthrottle: OpenSCENARIO!OverrideThrottleAction (
+			value <- 0.0,
+			active <- false
+		),
+		opbrake: OpenSCENARIO!OverrideBrakeAction (
+			value <- 0.0,
+			active <- false
+		),
+		opclutch: OpenSCENARIO!OverrideClutchAction (
+			value <- 0.0,
+			active <- false
+		),
+		opparkingbrake: OpenSCENARIO!OverrideParkingBrakeAction (
+			value <- 0.0,
+			active <- false
+		),
+		opsteering: OpenSCENARIO!OverrideSteeringWheelAction (
+			value <- 0.0,
+			active <- false
+		),
+		opgear: OpenSCENARIO!OverrideGearAction (
+			number <- 0.0,
+			active <- false
+		)
+}
+
+lazy rule StaticInit {
+	from
+		crstaticinit: CommonRoad!StaticObstacle
+	to
+		opstaticinit: OpenSCENARIO!PrivateType (
+			entityRef <- 'Npc' + crstaticinit.id.toString(),
+			PrivateAction <- Sequence{privatespeed2,
+						privateposition2,
+						oppcon}
+		),
+		privatespeed2: OpenSCENARIO!PrivateActionType (
+			LongitudinalAction <- oplongitudinalAction2
+		),
+		oplongitudinalAction2: OpenSCENARIO!LongitudinalActionType (
+			SpeedAction <- opspeedaction2
+		),
+		opspeedaction2: OpenSCENARIO!SpeedActionType (
+			SpeedActionDynamics <- opspeedactiondynamic2,
+			SpeedActionTarget <- opspeedactiontarget2
+		),
+		opspeedactiondynamic2: OpenSCENARIO!TransitionDynamics (
+			dynamicsDimension <- 'time',
+			dynamicsShape <- 'step',
+			value <- 1.0
+		),
+		opspeedactiontarget2: OpenSCENARIO!SpeedActionTargetType (
+			AbsoluteTargetSpeed <- opabsolutetargetspeed2
+		),
+		opabsolutetargetspeed2: OpenSCENARIO!AbsoluteTargetSpeedType (
+			value <- crstaticinit.initialState.velocity.exact
+		),
+		privateposition2: OpenSCENARIO!PrivateActionType (
+			TeleportAction <- opteleportaction2
+		),
+		opteleportaction2: OpenSCENARIO!TeleportActionType (
+			Position <- opposition2
+		),
+		opposition2: OpenSCENARIO!PositionType (
+			WorldPosition <- opworldposition2
+		),
+		opworldposition2: OpenSCENARIO!WorldPositionType (
+			h <- crstaticinit.initialState.orientation.exact,
+			x <- thisModule.getX(crstaticinit.initialState.position.point.x.toString(),
+					crstaticinit.initialState.position.point.y.toString()),
+			y <- thisModule.getY(crstaticinit.initialState.position.point.x.toString(),
+					crstaticinit.initialState.position.point.y.toString()),
+			z <- 0.0
+		),
+		oppcon: OpenSCENARIO!PrivateActionType (
+			ControllerAction <- opcontrol
+		),
+		opcontrol: OpenSCENARIO!ControllerActionType (
+			AssignControllerAction <- opassigncontrol,
+			OverrideControllerValueAction <- opcontrolvalue
+		),
+		opassigncontrol: OpenSCENARIO!AssignControllerActionType (
+			Controller <- opc
+		),
+		opc: OpenSCENARIO!ControllerType (
+			name <- 'Npc' + crstaticinit.id.toString() + 'control',
+			Properties <- opproperties
+		),
+		opproperties: OpenSCENARIO!PropertiesType (
+			Property <- Sequence{opp}
+		),
+		opp: OpenSCENARIO!PropertyType (
+			name <- 'module',
+			value <- thisModule.gethelper(crstaticinit.type)
+		),
+		opcontrolvalue: OpenSCENARIO!OverrideControllerValueActionType (
+			Throttle <- opthrottle,
+			Brake <- opbrake,
+			Clutch <- opclutch,
+			ParkingBrake <- opparkingbrake,
+			SteeringWheel <- opsteering,
+			Gear <- opgear
+		),
+		opthrottle: OpenSCENARIO!OverrideThrottleAction (
+			value <- 0.0,
+			active <- false
+		),
+		opbrake: OpenSCENARIO!OverrideBrakeAction (
+			value <- 0.0,
+			active <- false
+		),
+		opclutch: OpenSCENARIO!OverrideClutchAction (
+			value <- 0.0,
+			active <- false
+		),
+		opparkingbrake: OpenSCENARIO!OverrideParkingBrakeAction (
+			value <- 0.0,
+			active <- false
+		),
+		opsteering: OpenSCENARIO!OverrideSteeringWheelAction (
+			value <- 0.0,
+			active <- false
+		),
+		opgear: OpenSCENARIO!OverrideGearAction (
+			number <- 0.0,
+			active <- false
+		)
+}
+
+lazy rule ObstacleInit {
+	from
+		crobstacleinit: CommonRoad!ObstacleType
+	to
+		opobstacleinit: OpenSCENARIO!PrivateType (
+			entityRef <- 'Npc' + crobstacleinit.id.toString(),
+			PrivateAction <- Sequence{privatespeed3,
+						privateposition3,
+						oppcon,
+						opprivate}
+		),
+		privatespeed3: OpenSCENARIO!PrivateActionType (
+			LongitudinalAction <- oplongitudinalAction3
+		),
+		oplongitudinalAction3: OpenSCENARIO!LongitudinalActionType (
+			SpeedAction <- opspeedaction3
+		),
+		opspeedaction3: OpenSCENARIO!SpeedActionType (
+			SpeedActionDynamics <- opspeedactiondynamic3,
+			SpeedActionTarget <- opspeedactiontarget3
+		),
+		opspeedactiondynamic3: OpenSCENARIO!TransitionDynamics (
+			dynamicsDimension <- 'time',
+			dynamicsShape <- 'step',
+			value <- 1.0
+		),
+		opspeedactiontarget3: OpenSCENARIO!SpeedActionTargetType (
+			AbsoluteTargetSpeed <- opabsolutetargetspeed3
+		),
+		opabsolutetargetspeed3: OpenSCENARIO!AbsoluteTargetSpeedType (
+			value <- crobstacleinit.initialState.velocity.exact
+		),
+		privateposition3: OpenSCENARIO!PrivateActionType (
+			TeleportAction <- opteleportaction3
+		),
+		opteleportaction3: OpenSCENARIO!TeleportActionType (
+			Position <- opposition3
+		),
+		opposition3: OpenSCENARIO!PositionType (
+			WorldPosition <- opworldposition3
+		),
+		opworldposition3: OpenSCENARIO!WorldPositionType (
+			h <- crobstacleinit.initialState.orientation.exact,
+			x <- thisModule.getX(crobstacleinit.initialState.position.point.x.toString(),
+					crobstacleinit.initialState.position.point.y.toString()),
+			y <- thisModule.getY(crobstacleinit.initialState.position.point.x.toString(),
+					crobstacleinit.initialState.position.point.y.toString()),
+			z <- 0.0
+		),
+		oppcon: OpenSCENARIO!PrivateActionType (
+			ControllerAction <- opcontrol
+		),
+		opcontrol: OpenSCENARIO!ControllerActionType (
+			AssignControllerAction <- opassigncontrol,
+			OverrideControllerValueAction <- opcontrolvalue
+		),
+		opassigncontrol: OpenSCENARIO!AssignControllerActionType (
+			Controller <- opc
+		),
+		opc: OpenSCENARIO!ControllerType (
+			name <- 'Npc' + crobstacleinit.id.toString() + 'control',
+			Properties <- opproperties
+		),
+		opproperties: OpenSCENARIO!PropertiesType (
+			Property <- Sequence{opp}
+		),
+		opp: OpenSCENARIO!PropertyType (
+			name <- 'module',
+			value <- thisModule.gethelper(crobstacleinit.type)
+		),
+		opcontrolvalue: OpenSCENARIO!OverrideControllerValueActionType (
+			Throttle <- opthrottle,
+			Brake <- opbrake,
+			Clutch <- opclutch,
+			ParkingBrake <- opparkingbrake,
+			SteeringWheel <- opsteering,
+			Gear <- opgear
+		),
+		opthrottle: OpenSCENARIO!OverrideThrottleAction (
+			value <- 0.0,
+			active <- false
+		),
+		opbrake: OpenSCENARIO!OverrideBrakeAction (
+			value <- 0.0,
+			active <- false
+		),
+		opclutch: OpenSCENARIO!OverrideClutchAction (
+			value <- 0.0,
+			active <- false
+		),
+		opparkingbrake: OpenSCENARIO!OverrideParkingBrakeAction (
+			value <- 0.0,
+			active <- false
+		),
+		opsteering: OpenSCENARIO!OverrideSteeringWheelAction (
+			value <- 0.0,
+			active <- false
+		),
+		opgear: OpenSCENARIO!OverrideGearAction (
+			number <- 0.0,
+			active <- false
+		),
+		opprivate: OpenSCENARIO!PrivateActionType (
+			LongitudinalAction <- oplong
+		),
+		oplong: OpenSCENARIO!LongitudinalActionType (
+			SpeedProfileAction <- opspeed
+		),
+		opspeed: OpenSCENARIO!SpeedProfileActionType (
+			followingMode <- 'follow',
+			SpeedProfileEntry <- thisModule.getspeedSet(crobstacleinit.trajectory.state.
+					asSequence())
+		)
+}
+
+lazy rule ObstacleInitInter {
+	from
+		crobstacleinit: CommonRoad!ObstacleType
+	to
+		opobstacleinit: OpenSCENARIO!PrivateType (
+			entityRef <- 'Npc' + crobstacleinit.id.toString(),
+			PrivateAction <- Sequence{privatespeed3,
+						privateposition3,
+						oppcon}
+		),
+		privatespeed3: OpenSCENARIO!PrivateActionType (
+			LongitudinalAction <- oplongitudinalAction3
+		),
+		oplongitudinalAction3: OpenSCENARIO!LongitudinalActionType (
+			SpeedAction <- opspeedaction3
+		),
+		opspeedaction3: OpenSCENARIO!SpeedActionType (
+			SpeedActionDynamics <- opspeedactiondynamic3,
+			SpeedActionTarget <- opspeedactiontarget3
+		),
+		opspeedactiondynamic3: OpenSCENARIO!TransitionDynamics (
+			dynamicsDimension <- 'time',
+			dynamicsShape <- 'step',
+			value <- 1.0
+		),
+		opspeedactiontarget3: OpenSCENARIO!SpeedActionTargetType (
+			AbsoluteTargetSpeed <- opabsolutetargetspeed3
+		),
+		opabsolutetargetspeed3: OpenSCENARIO!AbsoluteTargetSpeedType (
+			value <- crobstacleinit.initialState.velocity.exact
+		),
+		privateposition3: OpenSCENARIO!PrivateActionType (
+			TeleportAction <- opteleportaction3
+		),
+		opteleportaction3: OpenSCENARIO!TeleportActionType (
+			Position <- opposition3
+		),
+		opposition3: OpenSCENARIO!PositionType (
+			WorldPosition <- opworldposition3
+		),
+		opworldposition3: OpenSCENARIO!WorldPositionType (
+			h <- crobstacleinit.initialState.orientation.exact,
+			x <- thisModule.getX(crobstacleinit.initialState.position.point.x.toString(),
+					crobstacleinit.initialState.position.point.y.toString()),
+			y <- thisModule.getY(crobstacleinit.initialState.position.point.x.toString(),
+					crobstacleinit.initialState.position.point.y.toString()),
+			z <- 0.0
+		),
+		oppcon: OpenSCENARIO!PrivateActionType (
+			ControllerAction <- opcontrol
+		),
+		opcontrol: OpenSCENARIO!ControllerActionType (
+			AssignControllerAction <- opassigncontrol,
+			OverrideControllerValueAction <- opcontrolvalue
+		),
+		opassigncontrol: OpenSCENARIO!AssignControllerActionType (
+			Controller <- opc
+		),
+		opc: OpenSCENARIO!ControllerType (
+			name <- 'Npc' + crobstacleinit.id.toString() + 'control',
+			Properties <- opproperties
+		),
+		opproperties: OpenSCENARIO!PropertiesType (
+			Property <- Sequence{opp}
+		),
+		opp: OpenSCENARIO!PropertyType (
+			name <- 'module',
+			value <- thisModule.gethelper(crobstacleinit.type)
+		),
+		opcontrolvalue: OpenSCENARIO!OverrideControllerValueActionType (
+			Throttle <- opthrottle,
+			Brake <- opbrake,
+			Clutch <- opclutch,
+			ParkingBrake <- opparkingbrake,
+			SteeringWheel <- opsteering,
+			Gear <- opgear
+		),
+		opthrottle: OpenSCENARIO!OverrideThrottleAction (
+			value <- 0.0,
+			active <- false
+		),
+		opbrake: OpenSCENARIO!OverrideBrakeAction (
+			value <- 0.0,
+			active <- false
+		),
+		opclutch: OpenSCENARIO!OverrideClutchAction (
+			value <- 0.0,
+			active <- false
+		),
+		opparkingbrake: OpenSCENARIO!OverrideParkingBrakeAction (
+			value <- 0.0,
+			active <- false
+		),
+		opsteering: OpenSCENARIO!OverrideSteeringWheelAction (
+			value <- 0.0,
+			active <- false
+		),
+		opgear: OpenSCENARIO!OverrideGearAction (
+			number <- 0.0,
+			active <- false
+		)
+}
+
+lazy rule DynamicManeuver {
+	from
+		crObstacle: CommonRoad!DynamicObstacle
+	to
+		opoabstacle: OpenSCENARIO!ManeuverGroupType (
+			Actors <- opactor,
+			Maneuver <- Sequence{opmaneuver},
+			maximumExecutionCount <- 1,
+			name <- 'Npc' + crObstacle.id.toString() + 'ManeuverGroup'
+		),
+		opactor: OpenSCENARIO!ActorsType (
+			EntityRef <- Sequence{opentity},
+			selectTriggeringEntities <- false
+		),
+		opentity: OpenSCENARIO!EntityRefType (
+			entityRef <- 'Npc' + crObstacle.id.toString()
+		),
+		opmaneuver: OpenSCENARIO!ManeuverType (
+			name <- 'Npc' + crObstacle.id.toString() + '_maneuver',
+			Event <- Sequence{openvent}
+		),
+		openvent: OpenSCENARIO!EventType (
+			Action <- Sequence{opaction},
+			name <- 'Npc' + crObstacle.id.toString() + 'FollowTrajectory',
+			priority <- 'overwrite',
+			StartTrigger <- opstarttrigger
+		),
+		opstarttrigger: OpenSCENARIO!TriggerType (
+			ConditionGroup <- Sequence{opconditiongroup1}
+		),
+		opconditiongroup1: OpenSCENARIO!ConditionGroupType (
+			Condition <- Sequence{opcondition1}
+		),
+		opcondition1: OpenSCENARIO!ConditionType (
+			name <- 'Npc' + crObstacle.id.toString() + 'startTrigger',
+			delay <- 0.0,
+			conditionEdge <- #rising,
+			ByValueCondition <- opvalue1
+		),
+		opvalue1: OpenSCENARIO!ByValueConditionType (
+			SimulationTimeCondition <- opstorycondition1
+		),
+		opstorycondition1: OpenSCENARIO!SimulationTimeConditionType (
+			rule <- 'greaterThan',
+			value <- 0.0
+		),
+		opaction: OpenSCENARIO!ActionType (
+			PrivateAction <- opprivate,
+			name <- 'Npc' + crObstacle.id.toString() + 'FollowTrajectory'
+		),
+		opprivate: OpenSCENARIO!PrivateActionType (
+			RoutingAction <- oprouting
+		),
+		oprouting: OpenSCENARIO!RoutingActionType (
+			AssignRouteAction <- opassroute
+		),
+		opassroute: OpenSCENARIO!AssignRouteActionType (
+			Route <- oproute
+		),
+		oproute: OpenSCENARIO!RouteType (
+			Waypoint <- thisModule.getwaypoint(crObstacle.trajectory.state.asSequence()),
+			name <- 'Npc' + crObstacle.id.toString() + 'route',
+			closed <- false
+		)
+}
+
+lazy rule DynamicManeuverinter {
+	from
+		crObstacle: CommonRoad!DynamicObstacle
+	to
+		opoabstacle: OpenSCENARIO!ManeuverGroupType (
+			Actors <- opactor,
+			Maneuver <- Sequence{opmaneuver},
+			maximumExecutionCount <- 1,
+			name <- 'Npc' + crObstacle.id.toString() + 'ManeuverGroup'
+		),
+		opactor: OpenSCENARIO!ActorsType (
+			EntityRef <- Sequence{opentity},
+			selectTriggeringEntities <- false
+		),
+		opentity: OpenSCENARIO!EntityRefType (
+			entityRef <- 'Npc' + crObstacle.id.toString()
+		),
+		opmaneuver: OpenSCENARIO!ManeuverType (
+			name <- 'Npc' + crObstacle.id.toString() + '_maneuver',
+			Event <- Sequence{openvent,
+						endenvent}
+		),
+		openvent: OpenSCENARIO!EventType (
+			Action <- Sequence{opaction},
+			name <- 'StartAutopilot',
+			priority <- 'overwrite',
+			StartTrigger <- opstarttrigger
+		),
+		opstarttrigger: OpenSCENARIO!TriggerType (
+			ConditionGroup <- Sequence{opconditiongroup1}
+		),
+		opconditiongroup1: OpenSCENARIO!ConditionGroupType (
+			Condition <- Sequence{opcondition1}
+		),
+		opcondition1: OpenSCENARIO!ConditionType (
+			name <- 'startTrigger',
+			delay <- 0.0,
+			conditionEdge <- #rising,
+			ByValueCondition <- opvalue1
+		),
+		opvalue1: OpenSCENARIO!ByValueConditionType (
+			SimulationTimeCondition <- opstorycondition1
+		),
+		opstorycondition1: OpenSCENARIO!SimulationTimeConditionType (
+			rule <- 'greaterThan',
+			value <- 0.0
+		),
+		opaction: OpenSCENARIO!ActionType (
+			PrivateAction <- opprivate,
+			name <- 'StartAutopilot'
+		),
+		opprivate: OpenSCENARIO!PrivateActionType (
+			ActivateControllerAction <- opcontrol
+		),
+		opcontrol: OpenSCENARIO!ActivateControllerActionType (
+			longitudinal <- true
+		),
+		endenvent: OpenSCENARIO!EventType (
+			Action <- Sequence{opaction2},
+			name <- 'StopAutopilot',
+			priority <- 'overwrite',
+			StartTrigger <- opstarttrigger2
+		),
+		opaction2: OpenSCENARIO!ActionType (
+			PrivateAction <- opprivate2,
+			name <- 'StopAutopilot'
+		),
+		opstarttrigger2: OpenSCENARIO!TriggerType (
+			ConditionGroup <- Sequence{opconditiongroup2}
+		),
+		opconditiongroup2: OpenSCENARIO!ConditionGroupType (
+			Condition <- Sequence{opcondition2}
+		),
+		opcondition2: OpenSCENARIO!ConditionType (
+			name <- 'startTrigger',
+			delay <- 0.0,
+			conditionEdge <- #rising,
+			ByValueCondition <- opvalue2
+		),
+		opvalue2: OpenSCENARIO!ByValueConditionType (
+			SimulationTimeCondition <- opstorycondition2
+		),
+		opstorycondition2: OpenSCENARIO!SimulationTimeConditionType (
+			rule <- 'greaterThan',
+			value <- 100.0
+		),
+		opprivate2: OpenSCENARIO!PrivateActionType (
+			ActivateControllerAction <- opcontrol2
+		),
+		opcontrol2: OpenSCENARIO!ActivateControllerActionType (
+			longitudinal <- false
+		)
+}
+
+lazy rule ObstacleManeuver {
+	from
+		crObstacle: CommonRoad!ObstacleType
+	to
+		opoabstacle: OpenSCENARIO!ManeuverGroupType (
+			Actors <- opactor,
+			Maneuver <- Sequence{opmaneuver},
+			maximumExecutionCount <- 1,
+			name <- 'Npc' + crObstacle.id.toString() + 'ManeuverGroup'
+		),
+		opactor: OpenSCENARIO!ActorsType (
+			EntityRef <- Sequence{opentity},
+			selectTriggeringEntities <- false
+		),
+		opentity: OpenSCENARIO!EntityRefType (
+			entityRef <- 'Npc' + crObstacle.id.toString()
+		),
+		opmaneuver: OpenSCENARIO!ManeuverType (
+			name <- 'Npc' + crObstacle.id.toString() + '_maneuver',
+			Event <- Sequence{openvent}
+		),
+		openvent: OpenSCENARIO!EventType (
+			Action <- Sequence{opaction},
+			name <- 'Npc' + crObstacle.id.toString() + 'FollowTrajectory',
+			priority <- 'overwrite',
+			StartTrigger <- opstarttrigger
+		),
+		opstarttrigger: OpenSCENARIO!TriggerType (
+			ConditionGroup <- Sequence{opconditiongroup1}
+		),
+		opconditiongroup1: OpenSCENARIO!ConditionGroupType (
+			Condition <- Sequence{opcondition1}
+		),
+		opcondition1: OpenSCENARIO!ConditionType (
+			name <- 'startTrigger',
+			delay <- 0.0,
+			conditionEdge <- #rising,
+			ByValueCondition <- opvalue1
+		),
+		opvalue1: OpenSCENARIO!ByValueConditionType (
+			SimulationTimeCondition <- opstorycondition1
+		),
+		opstorycondition1: OpenSCENARIO!SimulationTimeConditionType (
+			rule <- 'greaterThan',
+			value <- 0.0
+		),
+		opaction: OpenSCENARIO!ActionType (
+			PrivateAction <- opprivate,
+			name <- 'Npc' + crObstacle.id.toString() + 'FollowTrajectory'
+		),
+		opprivate: OpenSCENARIO!PrivateActionType (
+			RoutingAction <- oprouting
+		),
+		oprouting: OpenSCENARIO!RoutingActionType (
+			AssignRouteAction <- opassroute
+		),
+		opassroute: OpenSCENARIO!AssignRouteActionType (
+			Route <- oproute
+		),
+		oproute: OpenSCENARIO!RouteType (
+			Waypoint <- thisModule.getwaypoint(crObstacle.trajectory.state.asSequence()),
+			name <- 'Npc' + crObstacle.id.toString() + 'route',
+			closed <- false
+		)
+}
+
+lazy rule ObstacleManeuverinter {
+	from
+		crObstacle: CommonRoad!ObstacleType
+	to
+		opoabstacle: OpenSCENARIO!ManeuverGroupType (
+			Actors <- opactor,
+			Maneuver <- Sequence{opmaneuver},
+			maximumExecutionCount <- 1,
+			name <- 'Npc' + crObstacle.id.toString() + 'ManeuverGroup'
+		),
+		opactor: OpenSCENARIO!ActorsType (
+			EntityRef <- Sequence{opentity},
+			selectTriggeringEntities <- false
+		),
+		opentity: OpenSCENARIO!EntityRefType (
+			entityRef <- 'Npc' + crObstacle.id.toString()
+		),
+		opmaneuver: OpenSCENARIO!ManeuverType (
+			name <- 'Npc' + crObstacle.id.toString() + '_maneuver',
+			Event <- Sequence{openvent,
+						endenvent}
+		),
+		openvent: OpenSCENARIO!EventType (
+			Action <- Sequence{opaction},
+			name <- 'StartAutopilot',
+			priority <- 'overwrite',
+			StartTrigger <- opstarttrigger
+		),
+		opstarttrigger: OpenSCENARIO!TriggerType (
+			ConditionGroup <- Sequence{opconditiongroup1}
+		),
+		opconditiongroup1: OpenSCENARIO!ConditionGroupType (
+			Condition <- Sequence{opcondition1}
+		),
+		opcondition1: OpenSCENARIO!ConditionType (
+			name <- 'startTrigger',
+			delay <- 0.0,
+			conditionEdge <- #rising,
+			ByValueCondition <- opvalue1
+		),
+		opvalue1: OpenSCENARIO!ByValueConditionType (
+			SimulationTimeCondition <- opstorycondition1
+		),
+		opstorycondition1: OpenSCENARIO!SimulationTimeConditionType (
+			rule <- 'greaterThan',
+			value <- 0.0
+		),
+		opaction: OpenSCENARIO!ActionType (
+			PrivateAction <- opprivate,
+			name <- 'StartAutopilot'
+		),
+		opprivate: OpenSCENARIO!PrivateActionType (
+			ActivateControllerAction <- opcontrol
+		),
+		opcontrol: OpenSCENARIO!ActivateControllerActionType (
+			longitudinal <- true
+		),
+		endenvent: OpenSCENARIO!EventType (
+			Action <- Sequence{opaction2},
+			name <- 'StopAutopilot',
+			priority <- 'overwrite',
+			StartTrigger <- opstarttrigger2
+		),
+		opaction2: OpenSCENARIO!ActionType (
+			PrivateAction <- opprivate2,
+			name <- 'StopAutopilot'
+		),
+		opstarttrigger2: OpenSCENARIO!TriggerType (
+			ConditionGroup <- Sequence{opconditiongroup2}
+		),
+		opconditiongroup2: OpenSCENARIO!ConditionGroupType (
+			Condition <- Sequence{opcondition2}
+		),
+		opcondition2: OpenSCENARIO!ConditionType (
+			name <- 'startTrigger',
+			delay <- 0.0,
+			conditionEdge <- #rising,
+			ByValueCondition <- opvalue2
+		),
+		opvalue2: OpenSCENARIO!ByValueConditionType (
+			SimulationTimeCondition <- opstorycondition2
+		),
+		opstorycondition2: OpenSCENARIO!SimulationTimeConditionType (
+			rule <- 'greaterThan',
+			value <- 100.0
+		),
+		opprivate2: OpenSCENARIO!PrivateActionType (
+			ActivateControllerAction <- opcontrol2
+		),
+		opcontrol2: OpenSCENARIO!ActivateControllerActionType (
+			longitudinal <- false
+		)
+}
+
+lazy rule SpeedProfile {
+	from
+		crwaypoint: CommonRoad!State
+	to
+		opspeed: OpenSCENARIO!SpeedProfileEntryType (
+			time <- 1.0,
+			speed <- crwaypoint.velocity.exact + 0.0000001
+		)
+}
+
+lazy rule Vertex {
+	from
+		crwaypoint: CommonRoad!State
+	to
+		opvertex: OpenSCENARIO!VertexType (
+			time <- crwaypoint.time.exact - 1.0,
+			Position <- oppos
+		),
+		oppos: OpenSCENARIO!PositionType (
+			WorldPosition <- opworldpos
+		),
+		opworldpos: OpenSCENARIO!WorldPositionType (
+			h <- crwaypoint.orientation.exact,
+			x <- thisModule.getX(crwaypoint.position.point.x.toString(), crwaypoint.
+					position.point.y.toString()),
+			y <- thisModule.getY(crwaypoint.position.point.x.toString(), crwaypoint.
+					position.point.y.toString()),
+			z <- 0.0
+		)
+}
+
+lazy rule Waypoint {
+	from
+		crwaypoint: CommonRoad!State
+	to
+		opwaypoint: OpenSCENARIO!WaypointType (
+			routeStrategy <- 'shortest',
+			Position <- oppos
+		),
+		oppos: OpenSCENARIO!PositionType (
+			WorldPosition <- opworldpos
+		),
+		opworldpos: OpenSCENARIO!WorldPositionType (
+			h <- crwaypoint.orientation.exact,
+			x <- thisModule.getX(crwaypoint.position.point.x.toString(), crwaypoint.
+					position.point.y.toString()),
+			y <- thisModule.getY(crwaypoint.position.point.x.toString(), crwaypoint.
+					position.point.y.toString()),
+			z <- 0.0
+		)
+}
+
+lazy rule finalwaypoint {
+	from
+		crwaypoint: CommonRoad!State
+	to
+		opworldpos: OpenSCENARIO!WorldPositionType (
+			h <- crwaypoint.orientation.exact,
+			x <- thisModule.getX(crwaypoint.position.point.x.toString(), crwaypoint.
+					position.point.y.toString()),
+			y <- thisModule.getY(crwaypoint.position.point.x.toString(), crwaypoint.
+					position.point.y.toString()),
+			z <- 0.0
+		)
+}

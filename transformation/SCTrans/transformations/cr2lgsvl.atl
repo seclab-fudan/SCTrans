@@ -1,0 +1,306 @@
+-- @path CommonRoad=/SCTrans/metamodels/CommonRoad.ecore
+-- @path Lgsvl=/SCTrans/metamodels/Lgsvl.ecore
+-- @atlcompiler emftvm
+
+module cr2lgsvl;
+create OUT : Lgsvl from IN : CommonRoad;
+	
+helper def : mapinstance : "#native"!"SCTrans::Map" = 
+	"#native"!"SCTrans::Map".newInstance();
+
+helper def : randomvar : Integer=
+	let rnd : "#native"!"java::util::Random" = "#native"!"java::util::Random".newInstance() in
+ 	rnd.nextInt();
+
+helper def : randomint(i : Integer) : Integer=
+	let rnd : "#native"!"java::util::Random" = "#native"!"java::util::Random".newInstance() in
+ 	rnd.nextInt(i) + 1;
+
+helper def : getIntensity : Real =
+	if thisModule.randomvar = 1 then
+		0.0
+	else
+		if thisModule.randomvar = 0 then
+			0.5
+		else
+			0.8
+		endif
+	endif;
+
+helper def : randominstance : "#native"!"java::util::Random" = 
+	"#native"!"java::util::Random".newInstance();
+
+helper def : maptest : String =
+	thisModule.mapinstance.test();
+
+helper def : mapTrans(name : String) : String =
+	thisModule.mapinstance.runTranslate(name);
+
+helper def : getX(x : String, y : String) : Real =
+	thisModule.mapinstance.transPointX(x,y);
+
+helper def : getY(x : String, y : String) : Real =
+	thisModule.mapinstance.transPointY(x,y);
+
+helper def : getlanelet( id :Integer) : TupleType(x : Real, y : Real) =
+	let laneset : CommonRoad!Lanelet = CommonRoad!Lanelet.allInstances()->select(e|e.id = id)->first() in
+	let length : Integer = laneset.leftBound.point.asSequence()->size() in
+	--Tuple{x = (laneset.leftBound.point->last().x + laneset.leftBound.point->first().x + laneset.rightBound.point->last().x + laneset.rightBound.point->first().x)/4, y = (laneset.leftBound.point->last().y + laneset.leftBound.point->first().y + laneset.rightBound.point->last().y + laneset.rightBound.point->first().y)/4};
+	Tuple{x = (laneset.leftBound.point.asSequence()->at(length-1).x + laneset.rightBound.point.asSequence()->at(length - 1).x)/2, y = (laneset.leftBound.point.asSequence()->at(length -1).y + laneset.rightBound.point.asSequence()->at(length -1).y)/2};
+
+helper def : getlanelet2( id :Integer) : TupleType(x : Real, y : Real) =
+	let laneset : CommonRoad!Lanelet = CommonRoad!Lanelet.allInstances()->select(e|e.id = id)->first() in
+	let length : Integer = laneset.leftBound.point.asSequence()->size() in
+	Tuple{x = (laneset.leftBound.point->last().x + laneset.rightBound.point->last().x)/2, y = (laneset.leftBound.point->last().y + laneset.rightBound.point->last().y)/2};
+
+helper def : getlanelet_random : Integer =
+	let laneset : CommonRoad!Lanelet = CommonRoad!Lanelet.allInstances().asSequence()->first() in
+	laneset.id;
+	
+helper def : getdelta(id :Integer) : TupleType(x : Real, y : Real) =
+	Tuple{ x = thisModule.getlanelet2(id).x - thisModule.getlanelet(id).x, y=thisModule.getlanelet2(id).y - thisModule.getlanelet(id).y};
+
+helper def : atan2(delta : TupleType(x : Real, y : Real)) : Real = 
+	thisModule.mapinstance.getatan(delta.y,delta.x);
+	
+	
+helper def : getaverage(s : Sequence(Real)) : Real =
+	s->sum()/s->size();
+	
+helper def : getdst(destpoint : CommonRoad!GoalState) : TupleType(x:Real, y : Real) =
+	if destpoint.position.oclIsUndefined() then 
+		Tuple{x = thisModule.getlanelet(thisModule.getlanelet_random).x,y = thisModule.getlanelet(thisModule.getlanelet_random).y}
+	else
+		if not destpoint.position.rectangle.oclIsUndefined() then
+			Tuple{x = destpoint.position.rectangle.center.x ,y = destpoint.position.rectangle.center.y}
+		else
+			if not destpoint.position.circle.oclIsUndefined() then
+				Tuple{x = destpoint.position.circle.center.x,y = destpoint.position.circle.center.y}
+			else
+				if not destpoint.position.polygon.oclIsUndefined() then
+					Tuple{x = thisModule.getaverage(destpoint.position.polygon.point.asSequence()->collect(e|e.x)), y = thisModule.getaverage(destpoint.position.polygon.point.asSequence()->collect(e|e.y))}
+				else
+					Tuple{x = thisModule.getlanelet(destpoint.position.lanelet.ref).x,y = thisModule.getlanelet(destpoint.position.lanelet.ref).y}
+				endif
+			endif
+		endif
+	endif;
+
+helper def : getdstrot( crplan : CommonRoad!PlanningProblem) : Real =
+	if not crplan.goalState.orientation.oclIsUndefined()  then
+		(crplan.goalState.orientation.intervalStart + crplan.goalState.orientation.intervalEnd) / 2
+	else
+		if not crplan.goalState.position.oclIsUndefined() and not crplan.goalState.position.lanelet.oclIsUndefined() then
+			thisModule.atan2(thisModule.getdelta(crplan.goalState.position.lanelet.ref))
+		else
+			thisModule.atan2(thisModule.getdelta(thisModule.getlanelet_random))
+		endif
+	endif;
+		
+		
+helper def : getradian(cr : Real) : Real = 
+	90.0 - cr *180 /3.14;
+		
+helper def : getsin(rot : Real) : Real =
+	thisModule.mapinstance.getsin(rot);
+		
+helper def : getcos(rot : Real) : Real =
+	thisModule.mapinstance.getcos(rot);
+		
+helper def : getvar(type : CommonRoad!ObstacleTypeDynamic) : String = 
+	if type = #car then
+		'Sedan'
+	else
+		if type = #truck then
+			'BoxTruck'
+		else
+			if type = #bus then
+				'SchoolBus'
+			else
+				if type = #bicycle or type = #motorcycle then
+					'Bicyclist'
+				else
+					if type = #pedestrian then
+						'Robin'
+					else
+						if type = #taxi then
+							'Sedan'
+						else
+							'unknown'
+						endif
+					endif
+				endif
+			endif
+		endif
+	endif;
+		
+helper def : gettype(type : CommonRoad!ObstacleTypeDynamic) : String = 
+	if type = #pedestrian then
+		'3'
+	else
+		'2'
+	endif;
+				
+
+				
+helper def : getwaypointSet(input : Sequence(CommonRoad!State)) : Sequence(Lgsvl!WaypointsType) = 
+	if thisModule.interBool then
+		Sequence{}->union(Sequence{})
+	else
+		input->iterate(ee; r:Sequence(Lgsvl!WaypointsType) = Sequence{} | r->append(thisModule.State(ee)))
+	endif;
+
+helper def : interBool : Boolean =
+	thisModule.mapinstance.interactive;
+
+helper def : getbehavior : String = 
+	if thisModule.interBool then
+		'NPCLaneFollowBehaviour'
+	else
+		'NPCWaypointBehaviour'
+	endif;
+		
+		
+rule cr2lgsvl1 {
+	from
+		cr : CommonRoad!DocumentRoot
+	using {
+		mapname : String = thisModule.mapTrans(cr.commonRoad.benchmarkID);
+		}
+	to
+		lgsvl : Lgsvl!LgsvlJson(
+			version <- '0.01',
+			vseMetadata <- lgsvlcam,
+			weather <- lgsvlweather,
+			time <- lgsvltime,
+			map <- lgsvlmap,
+			--controllables <- Sequence{lgsvltest},
+			agents <- (cr.commonRoad.planningProblem.asSequence()->collect(e|thisModule.Ego(e)))->union(cr.commonRoad.obstacle->collect(e|thisModule.Obstacle(e)))->union(cr.commonRoad.dynamicObstacle.asSequence()->collect(e1|thisModule.Dynamic(e1)))->union(cr.commonRoad.staticObstacle.asSequence()->collect(e|thisModule.Static(e)))
+			--test <- lgsvlteslgsvltestt
+		),
+		lgsvlposition1 : Lgsvl!PositionType1(x<-'38.2729072570801',y<-'200',z<-'-49.4947319030762'),
+		lgsvlrotation1 : Lgsvl!RotationType(x<-90.0,y<-321.900115966797,z<-0.0),
+		lgsvlcameraset : Lgsvl!CameraSettingsType(position<-lgsvlposition1,rotation<-lgsvlrotation1),
+		lgsvlcam : Lgsvl!VseMetadataType(cameraSettings<-lgsvlcameraset),
+		lgsvlmap : Lgsvl!MapType(id<-'',name<-mapname,parameterType<-'map'),
+		--lgsvltest : Lgsvl!controType(name<-0.0,id<-0.0),
+		lgsvlweather : Lgsvl!weatherType(rain<-thisModule.getIntensity.toString(),fog<-thisModule.getIntensity.toString(),wetness<-thisModule.getIntensity.toString(),cloudiness<-thisModule.getIntensity.toString(),damage<-thisModule.getIntensity.toString()),
+		lgsvltime : Lgsvl!timeType(year<-2023,month<-thisModule.randomint(11),day<-thisModule.randomint(28),hour<-thisModule.randomint(23),minute<-thisModule.randomint(59),second<-thisModule.randomint(59))
+}
+
+	
+
+lazy rule Ego {
+	from
+		crego : CommonRoad!PlanningProblem
+	to
+		lgsvlego : Lgsvl!AgentsType(
+			id <-  '73805704-1e46-4eb6-b5f9-ec2244d5951e',--'3f4211dc-e5d7-42dc-94c5-c4832b1331bb',
+			uid <- '2339686e-b63c-444a-ac88-8c4accc3adaf',--'2339686e-b63c-444a-ac88-8c4accc3adaf',
+			variant <- 'Lincoln2017MKZ',
+			--variant<-'Jaguar2015XE',
+			type <- '1',
+			parameterType <- 'vehicle',
+			sensorsConfigurationId <- '2e9095fa-c9b9-4f3f-8d7d-65fa2bb03921',
+			--sensorsConfigurationId <- '367c1a0b-c5a3-4ffc-a6b2-635a762c8894',
+			transform <- lgsvltransform1,
+			initial_speed <- lgsvlinitialspeed,
+			destinationPoint <- lgsvldestPoint1
+			),
+		lgsvltransform1 : Lgsvl!TransformType(position<-lgsvlposition2,rotation<-lgsvlrotation2),
+		lgsvlposition2 : Lgsvl!PositionType(x<-thisModule.getX(crego.initialState.position.point.x.toString(),crego.initialState.position.point.y.toString()),y<-0.0,z<-thisModule.getY(crego.initialState.position.point.x.toString(),crego.initialState.position.point.y.toString())),
+		lgsvlrotation2 : Lgsvl!RotationType(x<-0.0,y<-thisModule.getradian(crego.initialState.orientation.exact),z<-0.0),
+		lgsvlinitialspeed : Lgsvl!InitialSpeedType(x<-thisModule.getcos(crego.initialState.orientation.exact) * crego.initialState.velocity.exact+0.0000001,y<-0.0,z<-thisModule.getsin(crego.initialState.orientation.exact) * crego.initialState.velocity.exact+0.0000001),
+		lgsvldestPoint1 : Lgsvl!TransformType(position<-lgsvlposition3,rotation<-lgsvlrotation3),
+		lgsvlposition3 : Lgsvl!PositionType(x<-thisModule.getX(thisModule.getdst(crego.goalState).x.toString(),thisModule.getdst(crego.goalState).y.toString()),y<-0.0,z<-thisModule.getY(thisModule.getdst(crego.goalState).x.toString(),thisModule.getdst(crego.goalState).y.toString())),
+		lgsvlrotation3 : Lgsvl!RotationType(x<-0.0,y<-thisModule.getradian(thisModule.getdstrot(crego)),z<-0.0)	
+}
+
+lazy rule Static {
+	from
+		crstatic : CommonRoad!StaticObstacle
+	to
+		lgsvlstatic : Lgsvl!AgentsType(
+			uid <- '',
+			variant <- 'Sedan',
+			type <- '2',
+			parameterType<-'vehicle',
+			transform <- lgsvltransform2,
+			behaviour <- lgsvlbehaviour1,
+			color <- lgsvlcolor1
+			),
+		lgsvltransform2 : Lgsvl!TransformType(position<-lgsvlposition4,rotation<-lgsvlrotation4),
+		lgsvlposition4 : Lgsvl!PositionType(x<-thisModule.getX(crstatic.initialState.position.point.x.toString(),crstatic.initialState.position.point.y.toString()),y<-0.0,z<-thisModule.getY(crstatic.initialState.position.point.x.toString(),crstatic.initialState.position.point.y.toString())),
+		lgsvlrotation4 : Lgsvl!RotationType(x<-0.0,y<-thisModule.getradian(crstatic.initialState.orientation.exact),z<-0.0),
+		lgsvlbehaviour1 : Lgsvl!BehaviourType(name<-'NPCWaypointBehaviour', parameters<-lgsvlparameter),
+		lgsvlparameter : Lgsvl!ParametersType(isLaneChange <-false,maxSpeed <-0),
+		lgsvlcolor1 : Lgsvl!ColorType(r<-0.619607746601105,g<-0.556862771511078,b<-0.462745070457459)
+	
+}
+
+
+
+
+lazy rule Dynamic {
+	from
+		crdynamic : CommonRoad!DynamicObstacle
+	to
+		lgsvldynamic : Lgsvl!AgentsType(
+			uid <- '',
+			variant <- thisModule.getvar(crdynamic.type),
+			type <- thisModule.gettype(crdynamic.type),
+			parameterType <- '',
+			transform <- lgsvltransform3,
+			behaviour <- lgsvlbehaviour2,
+			color <- lgsvlcolor2,
+			waypoints <- thisModule.getwaypointSet(crdynamic.trajectory.state.asSequence())
+			--waypoints <- CommonRoad!State.allInstances()->collect(e|thisModule.State(e))
+			),
+		lgsvltransform3 : Lgsvl!TransformType(position<-lgsvlposition4,rotation<-lgsvlrotation4),
+		lgsvlposition4 : Lgsvl!PositionType(x<-thisModule.getX(crdynamic.initialState.position.point.x.toString(),crdynamic.initialState.position.point.y.toString()),y<-0.0,z<-thisModule.getY(crdynamic.initialState.position.point.x.toString(),crdynamic.initialState.position.point.y.toString())),
+		lgsvlrotation4 : Lgsvl!RotationType(x<-0.0,y<-thisModule.getradian(crdynamic.initialState.orientation.exact),z<-0.0),	
+		lgsvlbehaviour2 : Lgsvl!BehaviourType(name<-thisModule.getbehavior, parameters<-lgsvlparameter2),
+		lgsvlparameter2 : Lgsvl!ParametersType(isLaneChange <-thisModule.interBool ,maxSpeed <- 15),
+		lgsvlcolor2 : Lgsvl!ColorType(r<-0.619607746601105,g<-0.556862771511078,b<-0.462745070457459)
+
+}
+
+lazy rule Obstacle {
+	from
+		crObstacle : CommonRoad!ObstacleType
+	to
+		lgsvlobstacle : Lgsvl!AgentsType(
+			uid <- '',
+			variant <- thisModule.getvar(crObstacle.type),
+			type <- thisModule.gettype(crObstacle.type),
+			parameterType <- '',
+			transform <- lgsvltransform4,
+			behaviour <- lgsvlbehaviour3,
+			color <- lgsvlcolor3,
+			waypoints <- thisModule.getwaypointSet(crObstacle.trajectory.state.asSequence())
+			),
+		lgsvltransform4 : Lgsvl!TransformType(position<-lgsvlposition5,rotation<-lgsvlrotation5),
+		lgsvlposition5 : Lgsvl!PositionType(x<-thisModule.getX(crObstacle.initialState.position.point.x.toString(),crObstacle.initialState.position.point.y.toString()),y<-0.0,z<-thisModule.getY(crObstacle.initialState.position.point.x.toString(),crObstacle.initialState.position.point.y.toString())),
+		lgsvlrotation5 : Lgsvl!RotationType(x<-0.0,y<-thisModule.getradian(crObstacle.initialState.orientation.exact),z<-0.0),	
+		lgsvlbehaviour3 : Lgsvl!BehaviourType(name<-thisModule.getbehavior, parameters<-lgsvlparameter3),
+		lgsvlparameter3 : Lgsvl!ParametersType(isLaneChange <-thisModule.interBool ,maxSpeed <- 15),
+		lgsvlcolor3 : Lgsvl!ColorType(r<-0.619607746601105,g<-0.556862771511078,b<-0.462745070457459)
+}
+
+
+lazy rule State {
+	from
+		crwaypoint : CommonRoad!State
+	to
+		lgsvlwaypoint : Lgsvl!WaypointsType(
+			ordinalNumber <- crwaypoint.time.exact - 1,
+			position <- lgsvlposition5,
+			angle <- lgsvlrotation5,
+			waitTime <- 0,
+			speed <- crwaypoint.velocity.exact+0.0000001
+			),
+		lgsvlposition5 : Lgsvl!PositionType(x<-thisModule.getX(crwaypoint.position.point.x.toString(),crwaypoint.position.point.y.toString()),y<-0.0,z<-thisModule.getY(crwaypoint.position.point.x.toString(),crwaypoint.position.point.y.toString())),
+		lgsvlrotation5 : Lgsvl!RotationType(x<-0.0,y<-thisModule.getradian(crwaypoint.orientation.exact),z<-0.0)
+
+}
+

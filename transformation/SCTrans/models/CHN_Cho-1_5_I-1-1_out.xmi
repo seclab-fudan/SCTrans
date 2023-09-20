@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="ASCII"?>
+<Lgsvl:LgsvlJson xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:Lgsvl="file:///home/gbf/eclipse-workspace/cr2lgsvl/metamodels/Lgsvl.ecore" version="0.01">
+  <vseMetadata>
+    <cameraSettings>
+      <position x="38.2729072570801" y="200" z="-49.4947319030762"/>
+      <rotation x="90.0" y="321.900115966797" z="0.0"/>
+    </cameraSettings>
+  </vseMetadata>
+  <weather rain="0.8" fog="0.8" wetness="0.8" cloudiness="0.8" damage="0.8"/>
+  <time year="2023" month="6" day="4" hour="12" second="57" minute="24"/>
+  <map id="" name="CHN_Cho-1_5_I-1-1" parameterType="map"/>
+  <agents id="73805704-1e46-4eb6-b5f9-ec2244d5951e" uid="2339686e-b63c-444a-ac88-8c4accc3adaf" variant="Lincoln2017MKZ" type="1" parameterType="vehicle" sensorsConfigurationId="2e9095fa-c9b9-4f3f-8d7d-65fa2bb03921">
+    <transform>
+      <position x="118.37226462984648" y="0.0" z="43.62837429509494"/>
+      <rotation x="0.0" y="67.3108280254777" z="0.0"/>
+    </transform>
+    <initial_speed x="6.504215327788472" y="0.0" z="2.7177942258683587"/>
+    <destinationPoint>
+      <position x="542.0653989247371" y="0.0" z="165.18374878842172"/>
+      <rotation x="0.0" y="74.08255375789501" z="0.0"/>
+    </destinationPoint>
+  </agents>
+  <agents uid="" variant="Sedan" type="2" parameterType="">
+    <transform>
+      <position x="363.89163292282643" y="0.0" z="123.80515684422961"/>
+      <rotation x="0.0" y="80.15589286624204" z="0.0"/>
+    </transform>
+    <behaviour name="NPCLaneFollowBehaviour">
+      <parameters isLaneChange="true" maxSpeed="15"/>
+    </behaviour>
+    <color r="0.619607746601105" g="0.556862771511078" b="0.462745070457459"/>
+  </agents>
+  <agents uid="" variant="Sedan" type="2" parameterType="">
+    <transform>
+      <position x="317.6316137498495" y="0.0" z="115.91333162052582"/>
+      <rotation x="0.0" y="77.19260560509554" z="0.0"/>
+    </transform>
+    <behaviour name="NPCLaneFollowBehaviour">
+      <parameters isLaneChange="true" maxSpeed="15"/>
+    </behaviour>
+    <color r="0.619607746601105" g="0.556862771511078" b="0.462745070457459"/>
+  </agents>
+  <agents uid="" variant="Sedan" type="2" parameterType="">
+    <transform>
+      <position x="341.231603561509" y="0.0" z="119.97477960084221"/>
+      <rotation x="0.0" y="78.5552015923567" z="0.0"/>
+    </transform>
+    <behaviour name="NPCLaneFollowBehaviour">
+      <parameters isLaneChange="true" maxSpeed="15"/>
+    </behaviour>
+    <color r="0.619607746601105" g="0.556862771511078" b="0.462745070457459"/>
+  </agents>
+  <agents uid="" variant="Sedan" type="2" parameterType="">
+    <transform>
+      <position x="384.5338207864815" y="0.0" z="130.84609096453076"/>
+      <rotation x="0.0" y="81.80253917197453" z="0.0"/>
+    </transform>
+    <behaviour name="NPCLaneFollowBehaviour">
+      <parameters isLaneChange="true" maxSpeed="15"/>
+    </behaviour>
+    <color r="0.619607746601105" g="0.556862771511078" b="0.462745070457459"/>
+  </agents>
+  <agents uid="" variant="Sedan" type="2" parameterType="">
+    <transform>
+      <position x="354.3000969970168" y="0.0" z="125.68173873510898"/>
+      <rotation x="0.0" y="80.14303605095542" z="0.0"/>
+    </transform>
+    <behaviour name="NPCLaneFollowBehaviour">
+      <parameters isLaneChange="true" maxSpeed="15"/>
+    </behaviour>
+    <color r="0.619607746601105" g="0.556862771511078" b="0.462745070457459"/>
+  </agents>
+  <agents uid="" variant="Sedan" type="2" parameterType="">
+    <transform>
+      <position x="132.02854045756507" y="0.0" z="49.208743778147245"/>
+      <rotation x="0.0" y="67.4182868789809" z="0.0"/>
+    </transform>
+    <behaviour name="NPCLaneFollowBehaviour">
+      <parameters isLaneChange="true" maxSpeed="15"/>
+    </behaviour>
+    <color r="0.619607746601105" g="0.556862771511078" b="0.462745070457459"/>
+  </agents>
+  <agents uid="" variant="Sedan" type="2" parameterType="">
+    <transform>
+      <position x="172.91731331963973" y="0.0" z="69.54915294432614"/>
+      <rotation x="0.0" y="68.3882701910828" z="0.0"/>
+    </transform>
+    <behaviour name="NPCLaneFollowBehaviour">
+      <parameters isLaneChange="true" maxSpeed="15"/>
+    </behaviour>
+    <color r="0.619607746601105" g="0.556862771511078" b="0.462745070457459"/>
+  </agents>
+  <agents uid="" variant="Sedan" type="2" parameterType="">
+    <transform>
+      <position x="126.25772059875449" y="0.0" z="50.58486003465651"/>
+      <rotation x="0.0" y="67.41884006369426" z="0.0"/>
+    </transform>
+    <behaviour name="NPCLaneFollowBehaviour">
+      <parameters isLaneChange="true" maxSpeed="15"/>
+    </behaviour>
+    <color r="0.619607746601105" g="0.556862771511078" b="0.462745070457459"/>
+  </agents>
+  <agents uid="" variant="Sedan" type="2" parameterType="">
+    <transform>
+      <position x="100.26948398754206" y="0.0" z="36.64342122724872"/>
+      <rotation x="0.0" y="68.99573006369427" z="0.0"/>
+    </transform>
+    <behaviour name="NPCLaneFollowBehaviour">
+      <parameters isLaneChange="true" maxSpeed="15"/>
+    </behaviour>
+    <color r="0.619607746601105" g="0.556862771511078" b="0.462745070457459"/>
+  </agents>
+  <agents uid="" variant="Sedan" type="2" parameterType="">
+    <transform>
+      <position x="85.39541333154273" y="0.0" z="33.60290726824029"/>
+      <rotation x="0.0" y="67.42037636942675" z="0.0"/>
+    </transform>
+    <behaviour name="NPCLaneFollowBehaviour">
+      <parameters isLaneChange="true" maxSpeed="15"/>
+    </behaviour>
+    <color r="0.619607746601105" g="0.556862771511078" b="0.462745070457459"/>
+  </agents>
+  <agents uid="" variant="Sedan" type="2" parameterType="">
+    <transform>
+      <position x="70.11251920817863" y="0.0" z="25.114402494995268"/>
+      <rotation x="0.0" y="68.6793370700637" z="0.0"/>
+    </transform>
+    <behaviour name="NPCLaneFollowBehaviour">
+      <parameters isLaneChange="true" maxSpeed="15"/>
+    </behaviour>
+    <color r="0.619607746601105" g="0.556862771511078" b="0.462745070457459"/>
+  </agents>
+  <agents uid="" variant="Sedan" type="2" parameterType="">
+    <transform>
+      <position x="52.99779168786723" y="0.0" z="20.138827913810225"/>
+      <rotation x="0.0" y="67.41809828025478" z="0.0"/>
+    </transform>
+    <behaviour name="NPCLaneFollowBehaviour">
+      <parameters isLaneChange="true" maxSpeed="15"/>
+    </behaviour>
+    <color r="0.619607746601105" g="0.556862771511078" b="0.462745070457459"/>
+  </agents>
+  <agents uid="" variant="Sedan" type="2" parameterType="">
+    <transform>
+      <position x="35.06056723256299" y="0.0" z="11.4632491494804"/>
+      <rotation x="0.0" y="68.64144592356688" z="0.0"/>
+    </transform>
+    <behaviour name="NPCLaneFollowBehaviour">
+      <parameters isLaneChange="true" maxSpeed="15"/>
+    </behaviour>
+    <color r="0.619607746601105" g="0.556862771511078" b="0.462745070457459"/>
+  </agents>
+  <agents uid="" variant="Sedan" type="2" parameterType="">
+    <transform>
+      <position x="20.177520962432478" y="0.0" z="6.4991359602351295"/>
+      <rotation x="0.0" y="67.42467515923568" z="0.0"/>
+    </transform>
+    <behaviour name="NPCLaneFollowBehaviour">
+      <parameters isLaneChange="true" maxSpeed="15"/>
+    </behaviour>
+    <color r="0.619607746601105" g="0.556862771511078" b="0.462745070457459"/>
+  </agents>
+  <agents uid="" variant="Sedan" type="2" parameterType="">
+    <transform>
+      <position x="9.3110328332512" y="0.0" z="1.6718320433030918"/>
+      <rotation x="0.0" y="69.71241152866241" z="0.0"/>
+    </transform>
+    <behaviour name="NPCLaneFollowBehaviour">
+      <parameters isLaneChange="true" maxSpeed="15"/>
+    </behaviour>
+    <color r="0.619607746601105" g="0.556862771511078" b="0.462745070457459"/>
+  </agents>
+</Lgsvl:LgsvlJson>
