@@ -15,7 +15,7 @@ Existing datasets offer vehicle-side raw sensor data or naturalistic trajectorie
 
 In this work, we introduce a transformation-based approach which utilizes existing real-world traffic scenario datasets to create simulation scenario files. Formalizing it as a  Model Transformation Problem, we generate simulation-ready format scenario files that are compatible with advanced autonomous driving simulation platforms. We've implemented this concept in an automated tool called SCTrans, and we've assembled a dataset of over 1,900 diverse simulation scenarios.
 
-We plan to release the [source code](#open-source-protocol) and [datasets](#open-source-protocol) of VulScope, see [our sharing policy](#open-source-protocol) for more details.
+We plan to release the [source code](#open-source-protocol) and [datasets](#open-source-protocol), see [our sharing policy](#open-source-protocol) for more details.
 
 ## Approach Overview
 
