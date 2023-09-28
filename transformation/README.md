@@ -1,5 +1,7 @@
 # Scenario Transformation 
 
+This directory is dedicated to scenario transformation. It contains all the essential source codes, scripts, and files needed for converting various traffic scenarios into different formats of scenarios. The comprehensive guide and instructions included in this directory ensure that users can easily and effectively perform scenario transformations, making the process seamless and straightforward. The source code provided is open and can be modified to suit specific requirements, offering flexibility and adaptability to various use cases. Explore the directory to find out more about the SCTrans model transformation and make the most of the resources provided for efficient and successful scenario transformation.
+
 ## Environment Setup
 
 ### 1) Java
