@@ -29,8 +29,11 @@ python3 run_vse_test.py YOUR_SCENARIO_FILE_NAME.json
 Located in `carla-runner/` directory 
 
 ### Modifications
-- Added a waypoint controller for running waypoint behavior NPC.
-- [LMY-TODO]
+- Added a waypoint controller for running waypoint behavior NPC. The controller uses pure pursuit for lateral control and PID for longitudinal control. 
+
+- Updated to use OpenSCENARIOv1.2.xsd instead of OpenSCENARIO.xsd for schema verification.
+
+- Changed the setting of wall height to zero.
 
 ### Environment Setup
 1) Install Carla-0.9.13
