@@ -1,16 +1,20 @@
 # Scenario Transformation 
 
-This directory is dedicated to scenario transformation. It contains all the essential source codes, scripts, and files needed for converting various traffic scenarios into different formats of scenarios. The comprehensive guide and instructions included in this directory ensure that users can easily and effectively perform scenario transformations, making the process seamless and straightforward. The source code provided is open and can be modified to suit specific requirements, offering flexibility and adaptability to various use cases. Explore the directory to find out more about the SCTrans model transformation and make the most of the resources provided for efficient and successful scenario transformation.
+This repository focuses on scenario transformation, offering all vital source codes, scripts, and files for converting various traffic scenarios into different formats of scenarios. Our detailed guide ensures that users can navigate and execute scenario transformations with ease and clarity. The open-source nature of our code invites customization, catering to a range of specific needs and applications. Dive into the repository to discover more about the SCTrans model transformation and harness the full potential of our resources for optimal scenario conversions.
 
 ## Environment Setup
 
 ### 1) Java
+
+To ensure compatibility, make sure your Java version matches or is compatible with ours:
 ```
 -> & java --version
 openjdk version "17.0.5" 2022-11-02
 ```
 
 ### 2) Python
+
+Verify your Python version:
 ```
 -> % python --version
 Python 3.8.10
@@ -33,7 +37,8 @@ You can directly refer them in the project.
 
 ### 4) Python-lib Dependency
 
-During the transformation, we utilize and modify the crd 
+During the transformation, we utilize and modify the crd
+
 **Install:**
 ```
 pip install -r model_transoformation/SCTrans/src/map/requirements.txt
@@ -47,13 +52,14 @@ pip install -r model_transoformation/SCTrans/src/map/requirements.txt
 ### Source Traffic Scenario
 
 In this work, we implement SCTrans on three source traffic scenario datasets:
-- [CommonRoad](https://commonroad.in.tum.de/scenarios)
-- [inD Dataset](https://www.ind-dataset.com)
-- [highD Dataset](https://www.highd-dataset.com)
+- [CommonRoad](https://commonroad.in.tum.de/scenarios), a continuously growing collection of naturalistic datasets, handcrafted, and automatically generated scenarios
+- [inD Dataset](https://www.ind-dataset.com), a dataset of naturalistic trajectories of road users recorded on German **highways**
+- [highD Dataset](https://www.highd-dataset.com), a dataset of naturalistic trajectories of road users recorded at German **intersections**
 
 Please note that according to our policy, we cannot provide access to the source traffic scenarios directly. If you wish to access these source traffic scenarios, kindly refer to the official site below and adhere to the specified requirements.
 
-### Preprocessing Scenario
+### Preprocessing Source Scenario
+The scenarios from the above three source datasets are in different formats, necessitating preprocessing prior to transformation.
 
 For **CommonRoad** Scenario, you can directly download scenarios form official site [CommonRoad](https://commonroad.in.tum.de) and move it to the `SCTrans/models` directory.
 
@@ -61,6 +67,7 @@ For **inD** and **highD** Scenario, after downloading the traffic scenario, you 
 
 
 ### Scenario Transformation
+We provide both an executable JAR file and the source code, though we recommend utilizing the executable JAR file for optimal convenience.
 
 #### Quick Start
 You can use the following command to run a transformation. Remember to modify the path and arguments first.
@@ -89,4 +96,4 @@ Follow the tutorial of [Add new map](https://www.svlsimulator.com/docs/archive/2
 The output OpenDrive HD map may have some problems. Before using it in carla, you can use the script below to patch the problems. [TODO]
 
 ### Dataset
-We also provide all simulation-ready scenarios and maps, please see our website to get access.
+In addition, we offer a transformed dataset that includes both simulation-ready scenarios and corresponding maps. For access, please visit our [website](https://seclab-fudan.github.io/SCTrans/).
