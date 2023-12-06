@@ -1,7 +1,7 @@
 # SCTrans
 The repository provides the tools and scripts for the paper **"SCTrans: Constructing a Large Public Scenario Dataset for Simulation Testing of Autonomous Driving Systems"** accepted at ICSE24. Please follow our [website](https://seclab-fudan.github.io/SCTrans/) to access the Dataset.
 
-### File Descriptions
+### File Contents
 - `scenario-runner/` directory contains modified version of Lgsvl & Carla scenario runner
 - `transformation/` directory contains all code for scenario transformation
 
