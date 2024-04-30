@@ -109,12 +109,10 @@ a {
   color: $header-heading-color;
   text-align: center;
   background-color: $header-bg-color;
-  background-image: url("../../img/sctrans-github-pages.GIF");/*linear-gradient(120deg, $header-bg-color-secondary, $header-bg-color);*/
-
+  background-image: url("../../img/sctrans-pages.png"); /* 使用您提供的图片路径 */
   background-repeat: no-repeat;
-  background-size: contain;
+  background-size: cover; /* 更新此属性使图片撑满整个容器 */
   background-position: center;
-  /*background-size: cover;*/
 
   @include large {
     padding: 5rem 6rem;
