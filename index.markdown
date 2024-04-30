@@ -37,51 +37,96 @@ We intend to release this comprehensive dataset, containing all curated scenario
 
 Please note that according to our policy, we cannot provide access to the source traffic scenarios directly. If you wish to access these source traffic scenarios, kindly refer to the provided reference<sup><a href="#reference">[8,9,10]</a></sup> and adhere to the specified requirements.
 
+
+### Source Code
+
+We are dedicated to providing comprehensive access to the source code of all SCTrans modules. This encompasses SCTrans itself, the scenario runner for two simulators, and any other modified code. For straightforward deployment, we now offer a Docker container to facilitate easy setup and usage.
+
+#### Accessing the Source Code:
+
+- **GitHub Repository:** For direct access to the source code, please visit our GitHub repository at [SCTrans](https://github.com/seclab-fudan/SCTrans). If you find the repository useful, we would appreciate it if you could cite our paper and give the repository a **Star**🌟.
+
+- **Docker Container:**
+  - **Download Link:** The Docker container is available via Google Drive. You can download it [here](https://drive.google.com/file/d/1NReqsgsbG_gj-j89GF_2wx6hB4u_NRSJ/view?usp=share_link).
+  - **Usage Instructions:** For guidelines on how to use the Docker container, please refer to the artifact readme, which can be found [here](https://github.com/seclab-fudan/blob/main/ICSE_Artifact_Readme.pdf).
+
+#### Community Contributions:
+We welcome contributions from the community to improve the source code. If you have enhancements or find bugs, please share them by creating issues or submitting pull requests on our GitHub repository. Your contributions help us and the wider community by enhancing the tool's effectiveness and reliability.
+
+
 ## Source Code
 
 We are also in the process of releasing the complete source code for all SCTrans modules. This includes SCTrans itself, the scenario runner for two simulators, and any other modified code. For access to the source code, please refer to our GitHub repository at [SCTrans](https://github.com/seclab-fudan/SCTrans). If you find the repository useful, please consider citing our paper and give this repository a **Star**🌟.
+
+## Supplemental Source
+
+To complement the SCTrans tools and facilitate integration with popular simulation platforms, the following resources are available:
+
+- **Lgsvl Simulator Build Local Version:** 
+
+  A local version of the Lgsvl simulator can be accessed [here](https://github.com/emocat/simulator/tree/release-2021.2).
+
+- **Carla and Autoware Bridge:**
+  TODO!!
+
+- **Carla and Apollo Bridge Reference**
+  
+  [Access Link](https://github.com/guardstrikelab/carla_apollo_bridge).
+
+- **Lgsvl and Autoware Bridge Reference**
+
+  [Access Link](https://github.com/lgsvl/Autoware).
+
+- **Lgsvl and Apollo Bridge**
+
+  Please refer to the [Lgsvl PythonAPI](https://github.com/lgsvl/PythonAPI) repository for more information.
 
 ## Open Source Protocol
 
 ### Usage Limitation
 
-Everyone is invited and encouraged to utilize our tool for their projects and research. To prevent potential misuse of our tool and dataset, we have implemented basic authentication to confirm the identity of users seeking access to our source code and dataset. SCTrans tool and dataset provided within this initiative are exclusively intended for non-commercial academic research purposes. Any use for commercial purposes, including but not limited to licensing, selling, or activities for commercial gain, is strictly forbidden. Moreover, users must secure our express consent before distributing the dataset or source code to third parties.
+We invite and encourage everyone to utilize the SCTrans tool and dataset for their projects and research. To preserve the integrity of our tool and dataset and to prevent potential misuse, we have established an authentication process to verify the identities of users seeking access. The SCTrans tool and dataset are exclusively intended for non-commercial academic research purposes. Use for commercial purposes, including but not limited to licensing, selling, or any activity aimed at commercial gain, is strictly prohibited. Additionally, redistribution of the dataset or source code to third parties requires our express consent.
 
 ### Accessing the Dataset
 
-To apply for access to our source code and dataset, please read the following instructions and send your request email to Jiarun Dai (jrdai14@fudan.edu.cn) and Bufan Gao (bfgao22@m.fudan.edu.cn).
+To access the SCTrans source code and dataset, please follow these detailed instructions and send your request via email to our designated contacts.
 
-**=======  Instructions about Request Email =======**
+#### Instructions for Request Email
 
-#### For Academic Researchers:
+**For All Applicants:**
+Please send your access request email containing the following items:
 
-- For Students & Postdocs: Kindly request your academic advisor or host to send us an access request on your behalf.
+- **Official Request PDF:** Attach a PDF document printed on the official letterhead of your institute. The PDF should include:
+   - Your full name and academic or professional title.
+   - The name and logo of your institute.
+   - A detailed description of how you intend to use the SCTrans dataset.
+   - A statement confirming the dataset will be used strictly for non-commercial purposes.
+   - The official seal of your institute to authenticate the document.
 
-- For PIs: We welcome you to send your request directly from your university-affiliated email address.
+Emails should be sent to Jiarun Dai (jrdai14@fudan.edu.cn) and Bufan Gao (bfgao22@m.fudan.edu.cn). 
 
-When reaching out, please ensure to provide your full name, academic affiliation, and personal homepage or research profile (if we might not have crossed paths). We require this information strictly for verification. It's essential to understand that without clear identification or a recognizable affiliation, we may not be able to attend to your request.
+**Acknowledgements:**
+If you use our dataset or tool in your publications, we would appreciate a citation to our ICSE 2024 paper.
 
-Should your publications leverage our dataset or tool, we would greatly appreciate a citation to our ICSE 2024 paper.
+### Community Engagement and Error Reporting
 
-#### For Industry Researchers:
+We encourage active participation from our dataset community. If you encounter any discrepancies or errors within the dataset, please report them via email. After confirming the issue, we will:
+- Conduct a thorough review and verification.
+- Acknowledge and publish your contribution on our website.
 
-If you are affiliated with the industry, including research labs, kindly send us an email using your official company email address.
+Feel free to submit issues as your insights are valuable to the continuous improvement of SCTrans.
 
-In your correspondence, provide a succinct introduction of yourself, such as your name and title—particularly if we might not have crossed paths previously—as well as a brief mention of your company.
+### Transparency
 
-#### Mail Content:
-
-In your email, please kindly attach a justification letter (in PDF format) better printed on official letterhead. This letter should recognize the "SCTrans" project from Fudan University and explicitly outline the purpose behind your dataset or source code request. Moreover, confirm your commitment to utilizing the dataset or source code solely for non-commercial purposes and assure that it will not be disseminated to others without our prior consent. In addition, please affirm your intention to use the dataset or source code strictly for non-commercial objectives and provide assurance that there will be no distribution to third parties without our express permission. 
-
-It's essential to highlight that emails not conforming to the guidelines above will be overlooked. Furthermore, please be aware that we reserve the right to publicly display on the SCTrans homepage the names of universities, research laboratories, and companies that have submitted dataset access requests. By sending an email to us requesting access to our source code or dataset, you acknowledge and agree to abide by the aforementioned policy, especially that any use for commercial purposes, including but not limited to licensing, selling, or activities for commercial gain, is strictly forbidden.
+We reserve the right to publicly display on the SCTrans homepage the names and logos of institutions, research laboratories, and companies that have successfully applied for dataset access. By sending an email request for access, you acknowledge and agree to abide by the above policy.
 
 ## Paper Info
 
-[ICSE 2024] <strong>Constructing a Large Public Scenario Dataset for Simulation Testing of Autonomous Driving Systems</strong>
+[ICSE 2024] <strong>SCTrans: Constructing a Large Public Scenario Dataset for Simulation Testing of Autonomous Driving Systems</strong>
 
 *Jiarun Dai, Bufan Gao, Mingyuan Luo, Zongan Huang, Zhongrui Li, Yuan Zhang, Min Yang.*
 
-To appear in the 46th International Conference on Software Engineering (ICSE), Lisbon, Portugal, April 14-20, 2024 (coming soon).
+Paper Link: [ICSE24-SCTrans](https://dl.acm.org/doi/10.1145/3597503.3623350)
 
 ## Citation
 
@@ -96,7 +141,7 @@ To appear in the 46th International Conference on Software Engineering (ICSE), L
 
 ## Team Members
 
-- Jiarun Dai, Fudan University
+- [Jiarun Dai](https://djrrr.github.io), Fudan University
 
 - Bufan Gao, Fudan University
 
@@ -109,8 +154,6 @@ To appear in the 46th International Conference on Software Engineering (ICSE), L
 - [Yuan Zhang](https://yuanxzhang.github.io/), Fudan University
 
 - Min Yang, Fudan University
-
-
 
 ## Reference
 [1] M. Althoff, M. Koschi, and S. Manzinger. CommonRoad: Composable Benchmarks for Motion Planning on Roads. In Proceedings of the IEEE Intelligent Vehicles Symposium (IV), 2017.
