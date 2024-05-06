@@ -26,24 +26,25 @@ We value your contributions to improve SCTrans. Here’s how you can help:
 
 To complement the SCTrans tools and facilitate integration with popular simulation platforms, the following resources are available:
 
-- **Lgsvl Simulator Build Local Version:** 
+- **LGSVL Simulator Build Local Version:** 
 
-  A local version of the Lgsvl simulator can be accessed [here](https://github.com/emocat/simulator/tree/release-2021.2).
+  A local version of the LGSVL simulator can be accessed [here](https://github.com/emocat/simulator/tree/release-2021.2).
 
 - **Carla and Autoware Bridge:**
-  TODO!!
+  
+  A simulation bridge between Carla and Autoware can be accessed [here](https://github.com/tumftm/carla-autoware-bridge).
 
 - **Carla and Apollo Bridge Reference**
   
-  [Access Link](https://github.com/guardstrikelab/carla_apollo_bridge).
+  A simulation bridge between Carla and Apollo can be accessed [here](https://github.com/guardstrikelab/carla_apollo_bridge).
 
-- **Lgsvl and Autoware Bridge Reference**
+- **LGSVL and Autoware Bridge Reference**
 
-  [Access Link](https://github.com/lgsvl/Autoware).
+  A simulation bridge between LGSVL simulator and Autoware can be accessed [here](https://github.com/blabla-my/autoware-LGSVL-bridge).
 
-- **Lgsvl and Apollo Bridge**
+- **LGSVL and Apollo Bridge**
 
-  Please refer to the [Lgsvl PythonAPI](https://github.com/lgsvl/PythonAPI) repository for more information.
+  Please refer to the [LGSVL PythonAPI](https://github.com/lgsvl/PythonAPI) repository for more information.
 
 ### Publication
 If you find this repository useful, please consider citing our paper and give this repository a Star🌟.
