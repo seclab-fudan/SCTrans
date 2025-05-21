@@ -9,7 +9,7 @@ Welcome to the SCTrans repository, which provides tools and scripts supporting o
   - Explore the `scenario-runner/` directory for modified versions of Lgsvl & Carla scenario runners.
   - The `transformation/` directory contains all code necessary for scenario transformations.
 - **Docker Container:**
-  - **Download:** Access the Docker container [here](https://drive.google.com/file/d/1NReqsgsbG_gj-j89GF_2wx6hB4u_NRSJ/view?usp=share_link) to streamline setup and usage.
+  - **Download:** Access the Docker container [here](https://drive.google.com/file/d/1rTjg3jJOaUT80DUndZg4V9GczFa8dW9L/view?usp=share_link) to streamline setup and usage.
   - **Instructions:** Detailed guidelines on using the Docker container are available in the artifact readme, accessible [here](https://github.com/seclab-fudan/SCTrans/blob/main/ICSE_Artifact_Readme.pdf).
 - [**Note**] We’ve transitioned away from the VM as the Docker setup is designed to be sufficient.
 

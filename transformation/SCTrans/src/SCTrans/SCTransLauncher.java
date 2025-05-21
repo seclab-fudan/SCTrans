@@ -311,6 +311,12 @@ public void formatxosc(String dir, String input) throws IOException{
     arrs.add(boolline1);
     while ((line=br.readLine())!=null) {
         arrs.add(line);
+		if (line.contains("<Center x=") && line.contains("z=")) {
+			line = line.replaceAll(
+				"<Center x=\"([^\"]+)\" z=\"([^\"]+)\"\\s*/>",
+				"<Center x=\"$1\" y=\"0.0\" z=\"$2\"/>"
+			);
+		}
     }
     br.close();
     isr.close();

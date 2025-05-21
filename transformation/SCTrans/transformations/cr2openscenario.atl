@@ -419,7 +419,7 @@ lazy rule EgoEntity {
 		),
 		opcenter: OpenSCENARIO!CenterType (
 			x <- 2.0,
-			y <- 0.0,
+			y <- 0.1,
 			z <- 0.9
 		),
 		opdimension: OpenSCENARIO!DimensionsType (
@@ -481,7 +481,7 @@ lazy rule DynamicEntityPed {
 		),
 		opcenter: OpenSCENARIO!CenterType (
 			x <- 2.0,
-			y <- 0.0,
+			y <- 0.1,
 			z <- 0.9
 		),
 		opdimension: OpenSCENARIO!DimensionsType (
@@ -520,7 +520,7 @@ lazy rule DynamicEntityVehicle {
 		),
 		opcenter: OpenSCENARIO!CenterType (
 			x <- 2.0,
-			y <- 0.0,
+			y <- 0.1,
 			z <- 0.9
 		),
 		opdimension: OpenSCENARIO!DimensionsType (
@@ -582,7 +582,7 @@ lazy rule StaticEntityPed {
 		),
 		opcenter: OpenSCENARIO!CenterType (
 			x <- 2.0,
-			y <- 0.0,
+			y <- 0.1,
 			z <- 0.9
 		),
 		opdimension: OpenSCENARIO!DimensionsType (
@@ -621,7 +621,7 @@ lazy rule StaticEntityVehicle {
 		),
 		opcenter: OpenSCENARIO!CenterType (
 			x <- 2.0,
-			y <- 0.0,
+			y <- 0.1,
 			z <- 0.9
 		),
 		opdimension: OpenSCENARIO!DimensionsType (
@@ -683,7 +683,7 @@ lazy rule ObstacleEntityPed {
 		),
 		opcenter: OpenSCENARIO!CenterType (
 			x <- 2.0,
-			y <- 0.0,
+			y <- 0.1,
 			z <- 0.9
 		),
 		opdimension: OpenSCENARIO!DimensionsType (
@@ -722,7 +722,7 @@ lazy rule ObstacleEntityVehicle {
 		),
 		opcenter: OpenSCENARIO!CenterType (
 			x <- 2.0,
-			y <- 0.0,
+			y <- 0.1,
 			z <- 0.9
 		),
 		opdimension: OpenSCENARIO!DimensionsType (
