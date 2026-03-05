@@ -47,8 +47,27 @@ To complement the SCTrans tools and facilitate integration with popular simulati
 
   Please refer to the [LGSVL PythonAPI](https://github.com/lgsvl/PythonAPI) repository for more information.
 
+### Accessing the Dataset
+
+To access the SCTrans source code and dataset, please follow these detailed instructions and send your request via email to our designated contacts.
+
+**For All Applicants:**
+Please send your access request email containing the following items:
+
+- **Official Request PDF:** Attach a PDF document printed on the official letterhead of your institute. The PDF should include:
+   - Your full name and academic or professional title.
+   - The name and logo of your institute.
+   - A detailed description of how you intend to use the SCTrans dataset.
+   - A statement confirming the dataset will be used strictly for non-commercial purposes.
+   - The official seal of your institute to authenticate the document.
+
+Emails should be sent to Jiarun Dai (jrdai14@fudan.edu.cn) and Bufan Gao (bufan@uchicago.edu). 
+
+**Acknowledgements:**
+If you use our dataset or tool in your publications, we would appreciate a citation to our ICSE 2024 paper.
+
 ### Publication
-If you find this repository useful, please consider citing our paper and give this repository a Star🌟.
+If you find this repository useful, please consider citing our paper and giving this repository a Star🌟.
 
 Paper Link: [ICSE24-SCTrans](https://dl.acm.org/doi/10.1145/3597503.3623350)
 
