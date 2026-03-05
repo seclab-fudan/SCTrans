@@ -144,7 +144,7 @@ Paper Link: [ICSE24-SCTrans](https://dl.acm.org/doi/10.1145/3597503.3623350)
 
 - [Jiarun Dai](https://djrrr.github.io), Fudan University
 
-- Bufan Gao, Fudan University
+- [Bufan Gao](https://jouisseuse.github.io), Fudan University
 
 - Mingyuan Luo, Fudan University
 
