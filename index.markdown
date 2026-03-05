@@ -104,7 +104,7 @@ Please send your access request email containing the following items:
    - A statement confirming the dataset will be used strictly for non-commercial purposes.
    - The official seal of your institute to authenticate the document.
 
-Emails should be sent to Jiarun Dai (jrdai14@fudan.edu.cn) and Bufan Gao (bfgao22@m.fudan.edu.cn). 
+Emails should be sent to Jiarun Dai (jrdai14@fudan.edu.cn) and Bufan Gao (bufan@uchicago.edu). 
 
 **Acknowledgements:**
 If you use our dataset or tool in your publications, we would appreciate a citation to our ICSE 2024 paper.
